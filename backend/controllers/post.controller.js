@@ -22,7 +22,7 @@ export const addNewPost = async (req, res) => {
             const post = await Post.create({
                 caption,
                 image: cloudResponse.secure_url,
-                author: authorId,
+                author: authorId
             });
             const user = await User.findById(authorId);
             if(user){
@@ -42,11 +42,11 @@ export const addNewPost = async (req, res) => {
 }
  export const getAllPost = async (req, res) => {
 try {
-    const posts= await Post.find().short({createdAt:-1})
-    .populate({path:"author",select:"username , profilePicture"})
+    const posts= await Post.find().sort({createdAt:-1})
+    .populate({path:"author",select:"username  profilePicture"})
     .populate({ path:"comments",
                 sort:{createdAt:-1}, // Sort comments by createdAt in descending order
-                populate:{path:"author",select:"username , profilePicture"}
+                populate:{path:"author",select:"username  profilePicture"}
     });
     return res.status(200).json({
         message: "Posts fetched successfully",
@@ -125,13 +125,18 @@ export const addComment = async (req, res) => {
 
         const { text } = req.body;
         const post = await Post.findById(postId);
-        if(!text) return res.status(400).json({ message: "Comment text is required",success:false });
+        if(!text) return res.status(400).json({ message: "text is required",success:false });
 
         const comment = await Comment.create({
             text,
             author: commentKrneWalaUserKiId,
             post: postId,
-        }).populate({path:"author",select:"username , profilePicture"});
+        })
+
+        await comment.populate({
+            path:"author",
+            select:"username  profilePicture"
+            });
         post.comments.push(comment._id);
         await post.save();
       
@@ -147,7 +152,7 @@ export const addComment = async (req, res) => {
 export const getCommentsOfPost = async (req, res) => {
    try {
     const postId = req.params.id;
-    const comments= await Comment.find({post:postId}).populate("author","username , profilePicture");
+    const comments= await Comment.find({post:postId}).populate("author","username  profilePicture");
     if(!comments) return res.status(404).json({ message: "No comments found for this post ",success:false });
     return res.status(200).json({
         success: true,
@@ -178,7 +183,7 @@ export const deletePost = async (req, res) => {
         await user.save();
 
         //dlete associated comments
-        await Commen.deleteMany({post:postId});
+        await Comment.deleteMany({post:postId});
 
         return res.status(200).json({
             message: "Post deleted successfully",
