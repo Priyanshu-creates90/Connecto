@@ -133,7 +133,7 @@ export const likePost = async (req, res) => {
                 userId:LikeKarneWalaUserKiId,
                 userDetails:user,
                 postId,
-                message:'Your Post was liked'
+                message:'Your Post was diliked'
             }
             const postOwnerSocketId =getReceiverSocketId(postOwnerId);
             io.to(postOwnerSocketId).emit('notification',notification)
