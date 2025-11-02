@@ -8,7 +8,7 @@
                 success: false
             });
         }
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.SECRET_KEY); //jwt is for password type data into any random string for privacy 
         if(!decoded){
             return res.status(401).json({
                 message: "Invalid",    
