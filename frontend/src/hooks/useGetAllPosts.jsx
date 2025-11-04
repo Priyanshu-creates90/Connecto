@@ -13,7 +13,7 @@ const useGetAllPost = () => {
                 const res = await axios.get('http://localhost:8000/api/v1/post/all', { withCredentials: true });
                 if (res.data.success) { 
                     console.log(res.data.posts);
-                    dispatch(setPosts(res.data.posts));
+                         dispatch(setPosts(res.data.posts));
                 }
             } catch (error) {
                 console.log(error);

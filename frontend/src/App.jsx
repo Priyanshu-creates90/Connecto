@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import { setSocket } from './redux/socketSlice'
 import { setOnlineUsers } from './redux/chatSlice'
+import { setLikeNotification } from './redux/rtnSlice'
 
 const browserRouter=createBrowserRouter([
   {
@@ -54,17 +55,22 @@ function App() {
   useEffect(() => {
        if (user) {
         const socketio= io('http://localhost:8000',{
-          query:{
+          query:{ //query because we have to send user id in the backend
             userId:user?._id
-          },
-          transports:['websocket']
+          }, 
+          transports:['websocket']  //many unsecessary api calling  in Network to stop that we use 
         });
         dispatch(setSocket(socketio));
         //listen all the events
         socketio.on('getOnlineUsers',(onlineUsers)=>{
           dispatch(setOnlineUsers(onlineUsers));
         });
-          return ()=>{
+            //notification
+        socketio.on("notification",(notification)=>{
+          dispatch (setLikeNotification(notification));
+          
+        })  ;
+          return ()=>{  //cleanup ,when user left the page it show ofline
             socketio.close();
             dispatch(setSocket(null));
           }
@@ -72,7 +78,7 @@ function App() {
           socket?.close();
         dispatch(setSocket(null));
        }
-  },[user,dispatch]);
+  },[user , dispatch ]);
     return (
     <>
       <RouterProvider router={browserRouter}/>
