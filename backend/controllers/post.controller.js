@@ -20,17 +20,26 @@ export const addNewPost = async (req, res) => {
 
             const fileUri =`data:image/jpeg;base64,${optimizedImageBuffer.toString('base64')}`;
             const cloudResponse = await cloudinary.uploader.upload(fileUri);
-            const post = await Post.create({
+            let post = await Post.create({
                 caption,
                 image: cloudResponse.secure_url,
                 author: authorId
             });
+
             const user = await User.findById(authorId);
             if(user){
                 user.posts.push(post._id);
                 await user.save();
             }
-            await post.populate({path:"author",select:"password"});
+
+            // Populate the post with required fields
+            post = await Post.findById(post._id)
+                .populate({path: "author", select: "username profilePicture"})
+                .populate({
+                    path: "comments",
+                    sort: {createdAt: -1},
+                    populate: {path: "author", select: "username profilePicture"}
+                });
 
             return res.status(201).json({
                 message: "Post created successfully",
@@ -89,19 +98,22 @@ export const likePost = async (req, res) => {
         await post.save();
 
         // implement socket io for real-time notification
-        const user =await User.findById(LikeKarneWalaUserKiId).select("username profilePicture");
-        const postOwnerId =post.author.toString();
-        if(postOwnerId!==LikeKarneWalaUserKiId){
+        const user = await User.findById(LikeKarneWalaUserKiId).select("username profilePicture");
+        const postOwnerId = post.author.toString();
+        if(postOwnerId !== LikeKarneWalaUserKiId){
             //emit a notification event
-            const notification={
-                type:'like',
-                userId:LikeKarneWalaUserKiId,
-                userDetails:user,
+            const notification = {
+                type: 'like',
+                userId: LikeKarneWalaUserKiId,
+                userDetails: user,
                 postId,
-                message:'Your Post was liked'
+                message: 'Your post was liked',
+                timestamp: new Date().toISOString()
             }
-            const postOwnerSocketId =getReceiverSocketId(postOwnerId);
-            io.to(postOwnerSocketId).emit('notification',notification)
+            const postOwnerSocketId = getReceiverSocketId(postOwnerId);
+            if (postOwnerSocketId) {
+                io.to(postOwnerSocketId).emit('notification', notification);
+            }
         }
         return res.status(200).json({
             message: "Post liked ",
@@ -123,20 +135,23 @@ export const likePost = async (req, res) => {
         await post.updateOne({ $pull: { likes: LikeKarneWalaUserKiId } });
         await post.save();
 
-        //implement socket io for real time notification
-          const user =await User.findById(LikeKarneWalaUserKiId).select("username profilePicture");
-        const postOwnerId =post.author.toString();
-        if(postOwnerId!==LikeKarneWalaUserKiId){
+        //implement socket io for real-time notification
+        const user = await User.findById(LikeKarneWalaUserKiId).select("username profilePicture");
+        const postOwnerId = post.author.toString();
+        if(postOwnerId !== LikeKarneWalaUserKiId){
             //emit a notification event
-            const notification={
-                type:'dislike',
-                userId:LikeKarneWalaUserKiId,
-                userDetails:user,
+            const notification = {
+                type: 'dislike',
+                userId: LikeKarneWalaUserKiId,
+                userDetails: user,
                 postId,
-                message:'Your Post was diliked'
+                message: 'Your post was unliked',
+                timestamp: new Date().toISOString()
             }
-            const postOwnerSocketId =getReceiverSocketId(postOwnerId);
-            io.to(postOwnerSocketId).emit('notification',notification)
+            const postOwnerSocketId = getReceiverSocketId(postOwnerId);
+            if (postOwnerSocketId) {
+                io.to(postOwnerSocketId).emit('notification', notification);
+            }
         }
 
         return res.status(200).json({
