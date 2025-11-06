@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 
 const Singup = () => {
@@ -14,6 +15,7 @@ const Singup = () => {
         password:""
     });
     const [loading,setLoading]=useState(false);
+    const {user}=useSelector(store=>store.auth);
     const Navigate=useNavigate();
     const changeEventHandler=(e)=>{
         setInput({...input,[e.target.name]:e.target.value});
@@ -46,6 +48,13 @@ const Singup = () => {
                 setLoading(false);
              }
         }
+
+        useEffect(()=>{
+                    if(user){
+                        Navigate("/");
+                    }
+                },[])
+
   return (
     <div className='flex items-center w-screen h-screen justify-center'>
         <form onSubmit={singupHandler} className=' shadow-lg flex flex-col gap-5 p-8'>
