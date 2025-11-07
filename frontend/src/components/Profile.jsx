@@ -31,7 +31,7 @@ const Profile = () => {
           <section className='flex items-center justify-center'>
             <Avatar className='h-52 w-52'>
               <AvatarImage src={userProfile?.profilePicture} alt="profilephoto" />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarFallback >CN</AvatarFallback>
             </Avatar>
           </section>
           <section>
@@ -48,10 +48,10 @@ const Profile = () => {
               <div className='flex flex-col gap-1'>
                 <span className='font-semibold'>{userProfile?.bio }</span>
                 <Badge className='w-fit' variant='secondary'><AtSign /> <span className='pl-1'>{userProfile?.username}</span> </Badge>
-                <span>Actor</span>
+                {/* <span>Actor</span>
                 <span>Karmanye vadhikaraste ma phaleshu kadachana🙏✨</span>
                 <span>Dm/mail for collabs♥️</span>
-                
+                 */}
               </div>
 
               <div className='flex items-center gap-2'>

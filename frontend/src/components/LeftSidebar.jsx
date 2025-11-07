@@ -8,25 +8,29 @@ import {
   Search,
   TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import CreatePost from "./CreatePost";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { setAuthUser } from "@/redux/authSlice";
+import { clearAllNotifications } from "@/redux/rtnSlice";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((store) => store.auth);
   const { likeNotification } = useSelector(
     (store) => store.realTimeNotification
   );
+  const { socket } = useSelector((store) => store.socketio);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
   const logoutHandler = async () => {
     try {
       const res = await axios.get("http://localhost:8000/api/v1/user/logout", {
@@ -53,14 +57,43 @@ const LeftSidebar = () => {
     } else if (textType === "Home") {
       navigate("/");
     } else if (textType === "Messages") {
+      setHasNewMessage(false);
       navigate("/chat");
     }
   };
+
+  useEffect(() => {
+    // Listen for new messages
+    socket?.on("newMessage", () => {
+      if (!location.pathname.includes("/chat")) {
+        setHasNewMessage(true);
+      }
+    });
+
+    // Clear message indicator when on chat page
+    if (location.pathname === "/chat") {
+      setHasNewMessage(false);
+    }
+
+    return () => {
+      socket?.off("newMessage");
+    };
+  }, [socket, location.pathname]);
   const sidebarItems = [
     { icon: <Home />, text: "Home" },
     { icon: <Search />, text: "Search" },
     { icon: <TrendingUp />, text: "Explore" },
-    { icon: <MessageCircle />, text: "Messages" },
+    {
+      icon: (
+        <div className="relative">
+          <MessageCircle />
+          {hasNewMessage && (
+            <div className="absolute -top-1 -right-0.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
+          )}
+        </div>
+      ),
+      text: "Messages",
+    },
     { icon: <Heart />, text: "Notifications" },
     { icon: <PlusSquare />, text: "Create" },
     {
@@ -99,7 +132,14 @@ const LeftSidebar = () => {
                 {item.icon}
                 <span>{item.text}</span>
                 {item.text === "Notifications" && (
-                  <Popover>
+                  
+                  <Popover
+                    onOpenChange={(open) => {
+                      if (!open && likeNotification?.length > 0) {
+                        dispatch(clearAllNotifications());
+                      }
+                    }}
+                  >
                     <PopoverTrigger
                       asChild
                       onClick={(e) => e.stopPropagation()}
@@ -109,9 +149,11 @@ const LeftSidebar = () => {
                         variant={
                           likeNotification?.length > 0 ? "destructive" : "ghost"
                         }
-                        className="rounded-full h-5 w-5 absolute bg-red-500  bottom-6 left-6"
+                        className={`rounded-full h-5 w-5 absolute bottom-6 left-6 ${
+                          likeNotification?.length > 0 ? "bg-red-500" : ""
+                        }`}
                       >
-                        {likeNotification?.length || 0}
+                        {likeNotification?.length || null}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0" align="start">
@@ -129,10 +171,11 @@ const LeftSidebar = () => {
                               <div
                                 key={`${notification.userId}-${index}`}
                                 className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-accent border-b last:border-0 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/post/${notification.postId}`);
-                                }}
+                                //   onClick={(e) => {
+                                //     e.stopPropagation();
+                                //     navigate(`/post/${notification.postId}`);
+                                //   }
+                                // }
                               >
                                 <Avatar className="h-10 w-10 shrink-0">
                                   <AvatarImage
@@ -149,7 +192,7 @@ const LeftSidebar = () => {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm truncate">
                                     <span
-                                      className="font-semibold hover:underline cursor-pointer"
+                                      className="font-semibold hover:bold  cursor-pointer"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(
@@ -160,17 +203,18 @@ const LeftSidebar = () => {
                                       {notification.userDetails?.username}
                                     </span>
                                     <span className="text-muted-foreground ml-1">
-                                      {notification.message ||
-                                        "liked your post"}
+                                      {/* {notification.message || */}
+                                      liked your post
+                                      {/* } */}
                                     </span>
                                   </p>
-                                  <span className="text-xs text-muted-foreground">
+                                  {/* <span className="text-xs text-muted-foreground">
                                     {notification.createdAt
                                       ? new Date(
                                           notification.createdAt
                                         ).toLocaleTimeString()
                                       : "Just now"}
-                                  </span>
+                                  </span> */}
                                 </div>
                               </div>
                             ))
