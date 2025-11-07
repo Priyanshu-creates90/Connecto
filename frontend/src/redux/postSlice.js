@@ -7,7 +7,13 @@ import { createSlice } from "@reduxjs/toolkit";
     },
     reducers:{
         setPosts:(state,action) =>{
-            state.posts=action.payload;
+            if (Array.isArray(action.payload)) {
+                // If receiving an array of posts (initial load)
+                state.posts = action.payload;  // Backend already sorts by createdAt
+            } else {
+                // If receiving a single new post
+                state.posts = [action.payload, ...state.posts];
+            }
         },
         setSelectedPost:(state,action) =>{
             state.selectedPost=action.payload;

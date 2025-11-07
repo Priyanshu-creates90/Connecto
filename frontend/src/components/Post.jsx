@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
-import {  Bookmark, MessageCircle, MoreHorizontal } from "lucide-react";
+import { Bookmark, MessageCircle, MoreHorizontal } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Send } from "lucide-react";
@@ -8,10 +8,9 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import CommentDialog from "./CommentDialog";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { setPosts, setSelectedPost} from "@/redux/postSlice";
+import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { toast } from "sonner";
 import { Badge } from "./ui/badge";
-
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -28,7 +27,7 @@ const Post = ({ post }) => {
     if (inputText.trim()) {
       setText(inputText);
     } else {
-      setText("");
+      setText(" ");
     }
   };
 
@@ -71,10 +70,11 @@ const Post = ({ post }) => {
         { text },
         {
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
           withCredentials: true,
-        });
+        }
+      );
       console.log(res.data);
       if (res.data.success) {
         const updatedCommentData = [...comment, res.data.comment];
@@ -112,17 +112,31 @@ const Post = ({ post }) => {
     }
   };
 
+      const bookmarkHandler = async () => {
+        try {
+          const res = await axios.get (`http://localhost:8000/api/v1/post/${post?._id}/bookmark`,{withCredentials:true});
+          if (res.data.success){
+            toast.success(res.data.message);
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      }
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex  items-center justify-between">
         <div className="flex items-center gap-2">
-          <Avatar >
+          <Avatar>
             <AvatarImage src={post.author?.profilePicture} alt="post_image" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div className=" flex items-center gap-3">
-          <h1>{post.author?.username}</h1>
-          {user?._id===post.author._id && <Badge className="bg-gray-100" variant="secondary">Author</Badge>}
+            <h1>{post.author?.username}</h1>
+            {user?._id === post.author._id && (
+              <Badge className="bg-gray-100" variant="secondary">
+                Author
+              </Badge>
+            )}
           </div>
         </div>
         <Dialog>
@@ -130,20 +144,26 @@ const Post = ({ post }) => {
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center text-sm text-center bg-white">
-            <Button
-              variant="ghost"
-              className="cursor-pointer w-fit text-[#ED4956]  bg-blackfont-bold"
-            > Unfollow </Button>
-            <Button variant="ghost" className="cursor-pointer w-fit ">
-              Add to favorites </Button>
-            {user && user?._id === post?.author._id && (
+            {/* Show Unfollow only for other users' posts */}
+            {user?._id !== post?.author._id && (
+              <Button
+                variant="ghost"
+                className="cursor-pointer w-fit text-[#ED4956] bg-blackfont-bold"
+              >
+                Unfollow
+              </Button>
+            )}
+            <Button variant="ghost" className="cursor-pointer w-fit">
+              Add to favorites
+            </Button>
+            {/* Show Delete only for user's own posts */}
+            {user?._id === post?.author._id && (
               <Button
                 variant="ghost"
                 onClick={deletePostHandler}
-                className="cursor-pointer w-fit "
+                className="cursor-pointer w-fit text-red-600 hover:underline"
               >
-                {" "}
-                Delete{" "}
+                Delete
               </Button>
             )}
           </DialogContent>
@@ -170,32 +190,34 @@ const Post = ({ post }) => {
               className="cursor-pointer hover:text-gray-600"
             />
           )}
-          <MessageCircle onClick={() =>{
-          dispatch(setSelectedPost(post));
-           setOpen(true);
-        }} className="cursor-pointer hover:text-gray-600"
+          <MessageCircle
+            onClick={() => {
+              dispatch(setSelectedPost(post));
+              setOpen(true);
+            }}
+            className="cursor-pointer hover:text-gray-600"
           />
           <Send className="cursor-pointer hover:text-gray-600 " />
         </div>
-        <Bookmark className="cursor-pointer hover:text-gray-600" />
+        <Bookmark  onClick={bookmarkHandler} className="cursor-pointer hover:text-gray-600" />
       </div>
       <span className="font-medium block mb-2">{postLike} likes</span>
       <p>
         <span className="font-medium mr-2">{post.author?.username}</span>
         {post.caption}
       </p>
-      {
-        comment.length >0 && (
-                                <span
-        onClick={() =>{
-          dispatch(setSelectedPost(post));
-           setOpen(true);
-        }} className="cursor-pointer hover:text-gray-400" >
-        View all {comment.length} comments
-      </span>
-        )
-      }
-    
+      {comment.length > 0 && (
+        <span
+          onClick={() => {
+            dispatch(setSelectedPost(post));
+            setOpen(true);
+          }}
+          className="cursor-pointer hover:text-gray-400"
+        >
+          View all {comment.length} comments
+        </span>
+      )}
+
       <CommentDialog open={open} setOpen={setOpen} />
       <div className="flex items-center justify-between">
         <input
@@ -205,8 +227,14 @@ const Post = ({ post }) => {
           onChange={changeEventHandler}
           className="outline-none text-sm w-full"
         />
-        {
-        text && <span  onClick={commentHandler}  className="text-[#3BADF9] cursor-pointer">Post</span>}
+        {text && (
+          <span
+            onClick={commentHandler}
+            className="text-[#3BADF9] cursor-pointer"
+          >
+            Post
+          </span>
+        )}
       </div>
     </div>
   );
