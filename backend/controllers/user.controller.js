@@ -56,15 +56,15 @@ export const login = async (req, res) => {
                 success: false
             });
         }
-        const isPasswordMatch = await bcrypt.compare(password,user.password);
+        const isPasswordMatch = await bcrypt.compare(password,user.password); //match the password that password given by user is same as password which has saved
         if(!isPasswordMatch){
             return res.status(401).json({
                 message: "Invalid credentials",
                 success: false
             });
         };
-        const token= await jwt.sign({userId:user._id},process.env.SECRET_KEY,{expiresIn:'1d'});
-        
+        const token= await jwt.sign({userId:user._id},process.env.SECRET_KEY,{expiresIn:'1d'}); //token 
+                                                                //env.secrest_key means it carry secretkey which store in .env file
         //populate each post if in the posts array of user
         const populatedPosts = await Promise.all(
             user.posts.map(async (postId) => {
@@ -86,7 +86,7 @@ export const login = async (req, res) => {
             Posts:populatedPosts,
         }
 
-        return res.cookie("token",token,{httpOnly:true,sameSite:'strict', maxAge : 1*24*60*60*1000}).json({
+        return res.cookie("token",token,{httpOnly:true,sameSite:'strict', maxAge : 1*24*60*60*1000}).json({ //cookie store token in variable token   //sameSite:'strict' use to give more security
             message:`Welcome back, ${user.username}`,
             success:true,
             user,
