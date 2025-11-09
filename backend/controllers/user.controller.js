@@ -153,8 +153,8 @@ export const editProfile = async (req, res) => {
 
 export const getSuggestedUsers = async (req, res) => {
     try{
-        const SuggestedUsers = await User.find({_id: {$ne: req.id}}).select("-password");
-        if (!SuggestedUsers){
+        const SuggestedUsers = await User.find({_id: {$ne: req.id}}).select("-password"); 
+        if (!SuggestedUsers){                        // !=request id          //not give password
             return res.status(404).json({
                 message: "No users found",
         
