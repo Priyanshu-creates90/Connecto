@@ -108,7 +108,8 @@ export const logout = async (_, res) => {
 
 export const getProfile = async (req, res) => {
     try{
-        const userId = req.params.id;
+        const userId = req.params.id; //req.params.id means jiska profile dekhna hai uska id //here params use to get id from url
+        //difference between req.params.id and req.id is req.id means jo login hai uska id and req.params.id means jiska profile dekhna hai uska id
         let user = await User.findById(userId).populate({path:'posts', createdAt:-1}).populate('bookmarks');
         return res.status(200).json({
             success:true,
@@ -170,8 +171,8 @@ export const getSuggestedUsers = async (req, res) => {
 };
 export const followOrUnfollow = async (req, res) => {
     try{
-        const followKrneWala = req.id;
-        const jiskoFollowKrunga = req.params.id;
+        const followKrneWala = req.id; // req.id means jo login hai uska id
+        const jiskoFollowKrunga = req.params.id; 
          if(followKrneWala === jiskoFollowKrunga){
             return res.status(400).json({
                 message: "You cannot follow/unfollow yourself",
