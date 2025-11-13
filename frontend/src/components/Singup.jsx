@@ -60,7 +60,7 @@ const Singup = () => {
         <form onSubmit={singupHandler} className=' shadow-lg flex flex-col gap-5 p-8'>
         <div className='my-4'>
             <h1 className='text-center font-bold text-xl'>LOGO</h1>
-            <p className='text-sm text-center'>Singup t see Photos & Videos from your friends</p>
+            <p className='text-sm text-center'>Singup to see Photos & Videos from your friends</p>
         </div>
         <div>
             <span className='font-medium flex '>Username</span>
