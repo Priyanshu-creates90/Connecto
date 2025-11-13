@@ -7,7 +7,7 @@ const useGetUserProfile = (userId) => {
     useEffect(()=>{
         const fetchUserProfile =async()=>{
             try {
-                const res =await axios.get(`http://localhost:8000/api/v1/user/${userId}/Profile`, { withCredentials:true})
+                const res =await axios.get(`https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`, { withCredentials:true})
                 if(res.data.success){
                     dispatch(setUserProfile(res.data.user));
                 }
