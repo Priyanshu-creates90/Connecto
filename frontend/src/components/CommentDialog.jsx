@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "./ui/dialog";
 import React, { useEffect, useState } from "react";
 import { MoreHorizontal, Store } from "lucide-react";
 import { Button } from "./ui/button";
@@ -10,18 +10,17 @@ import axios from "axios";
 import { toast } from "sonner";
 import { setPosts } from "@/redux/postSlice";
 
-
 const CommentDialog = ({ open, setOpen }) => {
   const [text, setText] = useState("");
-  const{selectedPost,posts } = useSelector (store=>store.post) ;
-  const[comment,setComment] = useState([]);
-  const dispatch=useDispatch();
+  const { selectedPost, posts } = useSelector((store) => store.post);
+  const [comment, setComment] = useState([]);
+  const dispatch = useDispatch();
 
-  useEffect (()=>{
-    if(selectedPost){
+  useEffect(() => {
+    if (selectedPost) {
       setComment(selectedPost.comments);
     }
-  },[selectedPost])
+  }, [selectedPost]);
   const changeEventHandler = (e) => {
     const inputText = e.target.value;
     if (inputText.trim()) {
@@ -32,21 +31,26 @@ const CommentDialog = ({ open, setOpen }) => {
   };
 
   const sendMessageHandler = async () => {
-
     try {
-      const res = await axios.post(`http://localhost:8000/api/v1/post/${selectedPost?._id}/comment`, { text }, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        withCredentials: true
-      });
+      const res = await axios.post(
+        `http://localhost:8000/api/v1/post/${selectedPost?._id}/comment`,
+        { text },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
       if (res.data.success) {
         const updatedCommentData = [...comment, res.data.comment];
         setComment(updatedCommentData);
 
-        const updatedPostData = posts.map(p =>
-          p._id === selectedPost._id ? { ...p, comments: updatedCommentData } : p
+        const updatedPostData = posts.map((p) =>
+          p._id === selectedPost._id
+            ? { ...p, comments: updatedCommentData }
+            : p
         );
         dispatch(setPosts(updatedPostData));
         toast.success(res.data.message);
@@ -55,7 +59,7 @@ const CommentDialog = ({ open, setOpen }) => {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <Dialog open={open}>
@@ -63,6 +67,7 @@ const CommentDialog = ({ open, setOpen }) => {
         onInteractOutside={() => setOpen(false)}
         className=" bg-white max-w-5xl p-0 flex flex-col"
       >
+        <DialogTitle className="sr-only">Post comments</DialogTitle>
         <div className="flex flex-1">
           <div className="w-1/2">
             <img
@@ -81,7 +86,9 @@ const CommentDialog = ({ open, setOpen }) => {
                   </Avatar>
                 </Link>
                 <div>
-                  <Link className="font-semibold text-xs">{selectedPost?.author?.username}</Link>
+                  <Link className="font-semibold text-xs">
+                    {selectedPost?.author?.username}
+                  </Link>
                 </div>
               </div>
               <Dialog>
@@ -89,6 +96,7 @@ const CommentDialog = ({ open, setOpen }) => {
                   <MoreHorizontal className="cursor-pointer" />
                 </DialogTrigger>
                 <DialogContent className="flex flex-col items-center text-sm text-center bg-white">
+                  <DialogTitle className="sr-only">Post options</DialogTitle>
                   <div className="cursor-pointer w-full text-[#ED4956] font-bold">
                     Unfollow
                   </div>
@@ -98,10 +106,10 @@ const CommentDialog = ({ open, setOpen }) => {
             </div>
             <hr />
             <div className="flex-1 overflow-y-auto max-h-96 p-4">
-              {
-                comment.map((comment)=>< Comment key={comment._id} comment={comment} /> )
-              }
-             {/* comments ayenge */}
+              {comment.map((comment) => (
+                <Comment key={comment._id} comment={comment} />
+              ))}
+              {/* comments ayenge */}
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2">

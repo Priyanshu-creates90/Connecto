@@ -20,6 +20,7 @@ const persistConfig = {
   key: 'root',
   version: 1,
   storage,
+  blacklist: ['socketio'], // Don't persist socketio slice
 }
  
 const rootReducer =combineReducers({
@@ -36,7 +37,8 @@ const store =configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, 'socketio/setSocket'],
+        ignoredPaths: ['socketio.socket'],
       },
     }),
 }); 
