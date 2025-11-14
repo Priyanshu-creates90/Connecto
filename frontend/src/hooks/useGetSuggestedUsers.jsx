@@ -9,7 +9,7 @@ const useGetSuggestedUsers = () => {
     const fetchSuggestedUsers = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8000/api/v1/user/suggested",
+          "https://connecto-1-psxd.onrender.com/api/v1/user/suggested",
           { withCredentials: true }
         );
         if (res.data.success) {

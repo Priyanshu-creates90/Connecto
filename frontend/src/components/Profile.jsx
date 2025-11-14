@@ -66,7 +66,7 @@ const Profile = () => {
       }
 
       const res = await axios.post(
-        `http://localhost:8000/api/v1/user/followOrUnfollow/${userId}`,
+        `https://connecto-1-psxd.onrender.com/api/v1/user/followOrUnfollow/${userId}`,
         {},
         { withCredentials: true }
       );
@@ -74,7 +74,7 @@ const Profile = () => {
       if (res.data.success) {
         // Refetch the profile to sync with backend
         const profileRes = await axios.get(
-          `http://localhost:8000/api/v1/user/${userId}/Profile`,
+          `https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`,
           { withCredentials: true }
         );
         if (profileRes.data.success) {
@@ -83,7 +83,7 @@ const Profile = () => {
 
         // Refetch logged-in user data to sync following array
         const userRes = await axios.get(
-          `http://localhost:8000/api/v1/user/profile`,
+          `https://connecto-1-psxd.onrender.com/api/v1/user/profile`,
           { withCredentials: true }
         );
         if (userRes.data.success) {
@@ -92,7 +92,7 @@ const Profile = () => {
 
         // Refetch suggested users to update follower counts
         const suggestedRes = await axios.get(
-          `http://localhost:8000/api/v1/user/suggested`,
+          `https://connecto-1-psxd.onrender.com/api/v1/user/suggested`,
           { withCredentials: true }
         );
         if (suggestedRes.data.success) {
@@ -107,7 +107,7 @@ const Profile = () => {
 
       // Revert optimistic update on error by refetching
       const profileRes = await axios.get(
-        `http://localhost:8000/api/v1/user/${userId}/Profile`,
+        `https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`,
         { withCredentials: true }
       );
       if (profileRes.data.success) {
@@ -115,7 +115,7 @@ const Profile = () => {
       }
 
       const userRes = await axios.get(
-        `http://localhost:8000/api/v1/user/profile`,
+        `https://connecto-1-psxd.onrender.com/api/v1/user/profile`,
         { withCredentials: true }
       );
       if (userRes.data.success) {
