@@ -192,7 +192,7 @@ export const followOrUnfollow = async (req, res) => {
             if (isFollowing){
                 await Promise.all([
                     User.updateOne({_id: followKrneWala},{$pull: {following: jiskoFollowKrunga}}),
-                    user.updateOne({_id: jiskoFollowKrunga},{$pull: {followers: followKrneWala}}),
+                    User.updateOne({_id: jiskoFollowKrunga},{$pull: {followers: followKrneWala}}),
                 ])
                 return res.status(200).json({
                     message: `You have unfollowed ${targetUser.username}`,
