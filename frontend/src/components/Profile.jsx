@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import useGetUserProfile from "@/hooks/useGetUserProfile";
-import { Link, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { AtSign, Heart, MessageCircle } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
+import {
+  setUserProfile,
+  setAuthUser,
+  setSelectedUser,
+  setSuggestedUsers,
+} from "@/redux/authSlice";
 
 const Profile = () => {
   const params = useParams();
@@ -14,12 +22,115 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("posts");
 
   const { userProfile, user } = useSelector((store) => store.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const isLoggedInUserProfile = user?._id === userProfile?._id;
-  const isFollowing = false;
+
+  // Derive isFollowing from Redux store instead of local state
+  const isFollowing = user?.following?.includes(userProfile?._id);
+
+  const handleFollowUnfollow = async () => {
+    try {
+      // Optimistically update Redux state immediately for instant UI update
+      const isCurrentlyFollowing = user?.following?.includes(userProfile?._id);
+
+      if (isCurrentlyFollowing) {
+        // Remove from following and followers arrays
+        dispatch(
+          setAuthUser({
+            ...user,
+            following: user.following.filter((id) => id !== userProfile._id),
+          })
+        );
+        dispatch(
+          setUserProfile({
+            ...userProfile,
+            followers: userProfile.followers.filter((id) => id !== user._id),
+          })
+        );
+      } else {
+        // Add to following and followers arrays
+        dispatch(
+          setAuthUser({
+            ...user,
+            following: [...(user.following || []), userProfile._id],
+          })
+        );
+        dispatch(
+          setUserProfile({
+            ...userProfile,
+            followers: [...(userProfile.followers || []), user._id],
+          })
+        );
+      }
+
+      const res = await axios.post(
+        `http://localhost:8000/api/v1/user/followOrUnfollow/${userId}`,
+        {},
+        { withCredentials: true }
+      );
+
+      if (res.data.success) {
+        // Refetch the profile to sync with backend
+        const profileRes = await axios.get(
+          `http://localhost:8000/api/v1/user/${userId}/Profile`,
+          { withCredentials: true }
+        );
+        if (profileRes.data.success) {
+          dispatch(setUserProfile(profileRes.data.user));
+        }
+
+        // Refetch logged-in user data to sync following array
+        const userRes = await axios.get(
+          `http://localhost:8000/api/v1/user/profile`,
+          { withCredentials: true }
+        );
+        if (userRes.data.success) {
+          dispatch(setAuthUser(userRes.data.user));
+        }
+
+        // Refetch suggested users to update follower counts
+        const suggestedRes = await axios.get(
+          `http://localhost:8000/api/v1/user/suggested`,
+          { withCredentials: true }
+        );
+        if (suggestedRes.data.success) {
+          dispatch(setSuggestedUsers(suggestedRes.data.users));
+        }
+
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Something went wrong");
+
+      // Revert optimistic update on error by refetching
+      const profileRes = await axios.get(
+        `http://localhost:8000/api/v1/user/${userId}/Profile`,
+        { withCredentials: true }
+      );
+      if (profileRes.data.success) {
+        dispatch(setUserProfile(profileRes.data.user));
+      }
+
+      const userRes = await axios.get(
+        `http://localhost:8000/api/v1/user/profile`,
+        { withCredentials: true }
+      );
+      if (userRes.data.success) {
+        dispatch(setAuthUser(userRes.data.user));
+      }
+    }
+  };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+  };
+
+  const handleMessage = () => {
+    dispatch(setSelectedUser(userProfile));
+    navigate("/chat");
   };
 
   const displayedPost =
@@ -47,19 +158,19 @@ const Profile = () => {
               <div className="flex items-center gap-4 sm:gap-6 text-sm sm:text-base">
                 <p>
                   <span className="font-semibold">
-                    {userProfile?.posts.length}{" "}
+                    {userProfile?.posts?.length || 0}{" "}
                   </span>
                   posts
                 </p>
                 <p>
                   <span className="font-semibold">
-                    {userProfile?.followers.length}{" "}
+                    {userProfile?.followers?.length || 0}{" "}
                   </span>
                   followers
                 </p>
                 <p>
                   <span className="font-semibold">
-                    {userProfile?.following.length}{" "}
+                    {userProfile?.following?.length || 0}{" "}
                   </span>
                   following
                 </p>
@@ -101,12 +212,14 @@ const Profile = () => {
                 ) : isFollowing ? (
                   <>
                     <Button
+                      onClick={handleFollowUnfollow}
                       variant="secondary"
                       className="h-10 sm:h-12 text-sm sm:text-base"
                     >
                       Unfollow
                     </Button>
                     <Button
+                      onClick={handleMessage}
                       variant="secondary"
                       className="h-10 sm:h-12 text-sm sm:text-base"
                     >
@@ -114,7 +227,10 @@ const Profile = () => {
                     </Button>
                   </>
                 ) : (
-                  <Button className="bg-[#1877F2] hover:bg-[#3192d2] text-white font-bold h-10 sm:h-12 w-full sm:w-auto text-sm sm:text-base">
+                  <Button
+                    onClick={handleFollowUnfollow}
+                    className="bg-[#1877F2] hover:bg-[#3192d2] text-white font-bold h-10 sm:h-12 w-full sm:w-auto text-sm sm:text-base"
+                  >
                     Follow
                   </Button>
                 )}

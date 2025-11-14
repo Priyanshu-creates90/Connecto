@@ -33,9 +33,12 @@ const LeftSidebar = () => {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const logoutHandler = async () => {
     try {
-      const res = await axios.get("https://connecto-1-psxd.onrender.com/api/v1/user/logout", {
-        withCredentials: true,
-      });
+      const res = await axios.get(
+        "https://connecto-1-psxd.onrender.com/api/v1/user/logout",
+        {
+          withCredentials: true,
+        }
+      );
       if (res.data.success) {
         dispatch(setAuthUser(null));
         dispatch(setSelectedPost(null));
@@ -53,7 +56,7 @@ const LeftSidebar = () => {
     } else if (textType === "Create") {
       setOpen(true);
     } else if (textType === "Profile") {
-      navigate(`/Profile/${user?._id}`);
+      navigate(`/profile/${user?._id}`);
     } else if (textType === "Home") {
       navigate("/");
     } else if (textType === "Messages") {
