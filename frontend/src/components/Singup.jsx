@@ -1,107 +1,130 @@
-import React, { useEffect, useState } from 'react'
-import { Input } from './ui/input'
-import { Button } from './ui/button'
-import axios from 'axios';
-import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import { useSelector } from 'react-redux';
-
+import React, { useEffect, useState } from "react";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import axios from "axios";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const Singup = () => {
-    const[input,setInput]=useState({
-        username:"",
-        email:"",
-        password:""
-    });
-    const [loading,setLoading]=useState(false);
-    const {user}=useSelector(store=>store.auth);
-    const Navigate=useNavigate();
-    const changeEventHandler=(e)=>{
-        setInput({...input,[e.target.name]:e.target.value});
-    }
+  const [input, setInput] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const { user } = useSelector((store) => store.auth);
+  const Navigate = useNavigate();
+  const changeEventHandler = (e) => {
+    setInput({ ...input, [e.target.name]: e.target.value });
+  };
 
-        const singupHandler = async(e) =>{
-            e.preventDefault();
-         
-             try {
-                setLoading(true);
-                const res = await axios.post('https://connecto-1-psxd.onrender.com/api/v1/user/register',input,{
-                    headers:{
-                        'Content-Type':'application/json'
-                    },
-                    withCredentials:true
-                });
-                if(res.data.success){
-                    Navigate("/login");
-                    toast.success(res.data.message);
-                      setInput({ 
-                        username:"",
-                        email:"",
-                        password:""
-                        })
-                }
-             } catch (error) {
-                console.log(error);
-                toast.error(error.response.data.message);
-             } finally{
-                setLoading(false);
-             }
+  const singupHandler = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      const res = await axios.post(
+        "https://connecto-1-psxd.onrender.com/api/v1/user/register",
+        input,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
         }
+      );
+      if (res.data.success) {
+        Navigate("/login");
+        toast.success(res.data.message);
+        setInput({
+          username: "",
+          email: "",
+          password: "",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        useEffect(()=>{
-                    if(user){
-                        Navigate("/");
-                    }
-                },[])
+  useEffect(() => {
+    if (user) {
+      Navigate("/");
+    }
+  }, []);
 
   return (
-    <div className='flex items-center w-screen h-screen justify-center'>
-        <form onSubmit={singupHandler} className=' shadow-lg flex flex-col gap-5 p-8'>
-        <div className='my-4'>
-            <h1 className='text-center font-bold text-xl'>LOGO</h1>
-            <p className='text-sm text-center'>Singup to see Photos & Videos from your friends</p>
+    <div className="flex items-center w-screen h-screen justify-center">
+      <form
+        onSubmit={singupHandler}
+        className=" shadow-lg flex flex-col gap-5 p-8"
+      >
+        <div className="my-4">
+          <h1 className="text-center font-bold text-xl">LOGO</h1>
+          <p className="text-sm text-center">
+            Singup t see Photos & Videos from your friends
+          </p>
         </div>
         <div>
-            <span className='font-medium flex '>Username</span>
-            <Input type="text"
+          <span className="font-medium flex ">Username</span>
+          <Input
+            type="text"
             name="username"
             value={input.udername}
             onChange={changeEventHandler}
-             className="focus-visible:ring-transparent my-2" 
-             />
+            autoComplete="username"
+            className="focus-visible:ring-transparent my-2"
+          />
         </div>
-         <div>
-            <span className='font-medium flex'>Email</span>
-            <Input type="email" 
+        <div>
+          <span className="font-medium flex">Email</span>
+          <Input
+            type="email"
             name="email"
             value={input.email}
             onChange={changeEventHandler}
-            className="focus-visible:ring-transparent my-2" />
+            autoComplete="email"
+            className="focus-visible:ring-transparent my-2"
+          />
         </div>
-         <div>
-            <span className='font-medium flex'>Password</span>
-            <Input type="password"
+        <div>
+          <span className="font-medium flex">Password</span>
+          <Input
+            type="password"
             name="password"
             value={input.password}
             onChange={changeEventHandler}
-            className="focus-visible:ring-transparent my-2" />
+            autoComplete="new-password"
+            className="focus-visible:ring-transparent my-2"
+          />
         </div>
-                  {
-                loading?(
-                    <Button>
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                        Please wait
-                    </Button>):(
-                                 <Button  type="submit" className="bg-slate-950 text-white"> Singup</Button>
-                    )
-            }
-               
-                <span className='text-center'> Already have an account ?<Link to="/login" className="text-blue-600">Login</Link>
-                </span>
-        </form>
-   </div>
-  )
-}
+        {loading ? (
+          <Button>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Please wait
+          </Button>
+        ) : (
+          <Button type="submit" className="bg-slate-950 text-white">
+            {" "}
+            Singup
+          </Button>
+        )}
 
-export default Singup
+        <span className="text-center">
+          {" "}
+          Already have an account ?
+          <Link to="/login" className="text-blue-600">
+            Login
+          </Link>
+        </span>
+      </form>
+    </div>
+  );
+};
+
+export default Singup;

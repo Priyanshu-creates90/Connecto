@@ -19,23 +19,48 @@ import ProtectedRoutes from "./components/ProtectedRoutes";
 const browserRouter = createBrowserRouter([
   {
     path: "/",
-    element: <ProtectedRoutes> <MainLayout /> </ProtectedRoutes> ,
+    element: (
+      <ProtectedRoutes>
+        {" "}
+        <MainLayout />{" "}
+      </ProtectedRoutes>
+    ),
     children: [
       {
         path: "/",
-        element: <ProtectedRoutes> <Home /> </ProtectedRoutes> ,
+        element: (
+          <ProtectedRoutes>
+            {" "}
+            <Home />{" "}
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "/profile/:id",
-        element: <ProtectedRoutes> <Profile /> </ProtectedRoutes> ,
+        element: (
+          <ProtectedRoutes>
+            {" "}
+            <Profile />{" "}
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "/account/edit",
-        element: <ProtectedRoutes> <EditProfile /> </ProtectedRoutes>,
+        element: (
+          <ProtectedRoutes>
+            {" "}
+            <EditProfile />{" "}
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "/chat",
-        element: <ProtectedRoutes> <ChatPage /> </ProtectedRoutes>,
+        element: (
+          <ProtectedRoutes>
+            {" "}
+            <ChatPage />{" "}
+          </ProtectedRoutes>
+        ),
       },
     ],
   },
@@ -55,8 +80,7 @@ function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     if (user) {
-    
-      const socketio = io("https://connecto-1-psxd.onrender.com", {
+      const socketio = io("http://localhost:8000", {
         query: {
           //query because we have to send user id in the backend
           userId: user?._id,

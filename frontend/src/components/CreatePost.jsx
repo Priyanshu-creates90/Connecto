@@ -1,5 +1,11 @@
 import React, { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 import { readFileAsDataURL } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
@@ -12,6 +18,7 @@ import { setPosts } from "@/redux/postSlice";
 
 const CreatePost = ({ open, setOpen }) => {
   const imageRef = useRef();
+  const textareaRef = useRef();
   const [file, setFile] = useState("");
   const [caption, setCaption] = useState("");
   const [imagePreview, setImagePreview] = useState("");
@@ -27,6 +34,26 @@ const CreatePost = ({ open, setOpen }) => {
       setImagePreview(dataUrl);
     }
   };
+
+  const handleClose = () => {
+    // Blur textarea immediately before closing to avoid aria-hidden focus warning
+    if (textareaRef.current) {
+      textareaRef.current.blur();
+    }
+    // Also blur any other focused elements
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    setOpen(false);
+    // Reset form after a slight delay to allow dialog animation
+    setTimeout(() => {
+      setCaption("");
+      setFile("");
+      setImagePreview("");
+    }, 100);
+  };
+
   const createPostHandler = async () => {
     const formData = new FormData();
     formData.append("caption", caption);
@@ -46,7 +73,7 @@ const CreatePost = ({ open, setOpen }) => {
       if (res.data.success) {
         dispatch(setPosts(res.data.post)); // Add single new post
         toast.success(res.data.message);
-        setOpen(false);
+        handleClose();
       }
     } catch (error) {
       toast.error(error.response.data.message);
@@ -56,13 +83,13 @@ const CreatePost = ({ open, setOpen }) => {
   };
 
   return (
-    <Dialog open={open}>
-      <DialogContent
-        className="bg-white"
-        onInteractOutside={() => setOpen(false)}
-      >
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="bg-white" onEscapeKeyDown={handleClose}>
         <DialogHeader className="text-center font-semibold">
-          Create New Post
+          <DialogTitle>Create New Post</DialogTitle>
+          <DialogDescription className="sr-only">
+            Create and share a new post with your followers
+          </DialogDescription>
         </DialogHeader>
         <div className="flex gap-3 items-center">
           <Avatar>
@@ -75,6 +102,7 @@ const CreatePost = ({ open, setOpen }) => {
           </div>
         </div>
         <Textarea
+          ref={textareaRef}
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           className="focus-visible:ring-transparent border-none"

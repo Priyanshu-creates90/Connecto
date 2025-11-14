@@ -9,14 +9,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { setAuthUser } from "@/redux/authSlice";
 import { clearAllNotifications } from "@/redux/rtnSlice";
 
-
 const Login = () => {
   const [input, setInput] = useState({
     email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const {user} =useSelector(store=>store.auth);
+  const { user } = useSelector((store) => store.auth);
   const Navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -57,11 +56,11 @@ const Login = () => {
     }
   };
 
-        useEffect(()=>{
-            if(user){
-                Navigate("/");
-            }
-        },[])
+  useEffect(() => {
+    if (user) {
+      Navigate("/");
+    }
+  }, []);
   return (
     <div className="flex items-center w-screen h-screen justify-center">
       <form
@@ -82,6 +81,7 @@ const Login = () => {
             name="email"
             value={input.email}
             onChange={changeEventHandler}
+            autoComplete="email"
             className="focus-visible:ring-transparent my-2"
           />
         </div>
@@ -92,6 +92,7 @@ const Login = () => {
             name="password"
             value={input.password}
             onChange={changeEventHandler}
+            autoComplete="current-password"
             className="focus-visible:ring-transparent my-2"
           />
         </div>
