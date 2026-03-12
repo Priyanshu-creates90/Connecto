@@ -1,5 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTrigger,
+  DialogTitle,
+} from "./ui/dialog";
 import { Bookmark, MessageCircle, MoreHorizontal } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
@@ -155,6 +161,9 @@ const Post = ({ post }) => {
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center text-sm text-center bg-white">
             <DialogTitle className="sr-only">Post options</DialogTitle>
+            <DialogDescription className="sr-only">
+              More actions for this post.
+            </DialogDescription>
             {/* Show Unfollow only for other users' posts */}
             {user?._id !== post?.author._id && (
               <Button

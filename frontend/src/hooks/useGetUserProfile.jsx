@@ -8,7 +8,7 @@ const useGetUserProfile = (userId) => {
     const fetchUserProfile = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/profile`,
           { withCredentials: true },
         );
         if (res.data.success) {

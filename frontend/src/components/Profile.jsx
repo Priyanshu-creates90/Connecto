@@ -74,7 +74,7 @@ const Profile = () => {
       if (res.data.success) {
         // Refetch the profile to sync with backend
         const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/profile`,
           { withCredentials: true },
         );
         if (profileRes.data.success) {
@@ -107,7 +107,7 @@ const Profile = () => {
 
       // Revert optimistic update on error by refetching
       const profileRes = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/profile`,
         { withCredentials: true },
       );
       if (profileRes.data.success) {

@@ -85,7 +85,6 @@ function App() {
           //query because we have to send user id in the backend
           userId: user?._id,
         },
-        transports: ["websocket"], //many unsecessary api calling  in Network to stop that we use
       });
       dispatch(setSocket(socketio));
       //listen all the events

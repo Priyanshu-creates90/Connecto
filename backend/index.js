@@ -9,6 +9,7 @@ import postRoute from "./routes/post.route.js";
 import { app,server } from "./socket/socket.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { isAllowedOrigin } from "./utils/cors.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirnameCurrent = path.dirname(__filename);
@@ -25,7 +26,14 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({extended:true}));
 const corsOptions={
-    origin:process.env.URL,
+    origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials:true,
 }
 app.use(cors(corsOptions));

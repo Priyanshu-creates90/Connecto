@@ -1,6 +1,7 @@
 import {Server} from "socket.io";
 import express from "express";
 import http from "http";
+import { isAllowedOrigin } from "../utils/cors.js";
 
 
 const app = express();
@@ -9,8 +10,16 @@ const server = http.createServer(app);
 
 const io = new Server( server ,{
     cors:{
-        origin:process.env.URL,
-        methods:['GET','POST']
+        origin: (origin, callback) => {
+            if (isAllowedOrigin(origin)) {
+                callback(null, true);
+                return;
+            }
+
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+        },
+        methods:['GET','POST'],
+        credentials:true
     }
 
 })

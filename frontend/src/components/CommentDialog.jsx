@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTrigger,
+  DialogTitle,
+} from "./ui/dialog";
 import React, { useEffect, useState } from "react";
-import { MoreHorizontal, Store } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import Comment from "./Comment";
@@ -68,6 +74,9 @@ const CommentDialog = ({ open, setOpen }) => {
         className=" bg-white max-w-5xl p-0 flex flex-col"
       >
         <DialogTitle className="sr-only">Post comments</DialogTitle>
+        <DialogDescription className="sr-only">
+          Read comments and add a new comment to this post.
+        </DialogDescription>
         <div className="flex flex-1">
           <div className="w-1/2">
             <img
@@ -97,6 +106,9 @@ const CommentDialog = ({ open, setOpen }) => {
                 </DialogTrigger>
                 <DialogContent className="flex flex-col items-center text-sm text-center bg-white">
                   <DialogTitle className="sr-only">Post options</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    More actions for this post.
+                  </DialogDescription>
                   <div className="cursor-pointer w-full text-[#ED4956] font-bold">
                     Unfollow
                   </div>
