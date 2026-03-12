@@ -8,8 +8,8 @@ const useGetUserProfile = (userId) => {
     const fetchUserProfile = async () => {
       try {
         const res = await axios.get(
-          `https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`,
-          { withCredentials: true }
+          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+          { withCredentials: true },
         );
         if (res.data.success) {
           dispatch(setUserProfile(res.data.user));

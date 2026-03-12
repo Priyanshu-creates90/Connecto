@@ -13,14 +13,14 @@ export const register = async (req, res) => {
         const {username, email, password} = req.body;
         // Check if user already exists
         if(!username || !email || !password){
-            return res.status(401).json({
+            return res.status(400).json({
                 message: "Something is missing,please check!",
                 success: false
             });
         }
         const user= await User.findOne({email});
         if(user){
-            return res.status(401).json({
+            return res.status(409).json({
                 message: "User already exists",
                 success: false
             });
@@ -37,6 +37,7 @@ export const register = async (req, res) => {
         }   );
 } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
 }
 }
 
@@ -44,7 +45,7 @@ export const login = async (req, res) => {
       try{
         const {email,password} = req.body;
         if(!email || !password){
-            return res.status(401).json({
+            return res.status(400).json({
                 message: "Something is missing,please check!",
                 success: false
             });
@@ -56,20 +57,20 @@ export const login = async (req, res) => {
                 success: false
             });
         }
-        const isPasswordMatch = await bcrypt.compare(password,user.password); //match the password that password given by user is same as password which has saved
+        const isPasswordMatch = await bcrypt.compare(password,user.password); 
         if(!isPasswordMatch){
             return res.status(401).json({
                 message: "Invalid credentials",
                 success: false
             });
         };
-        const token= await jwt.sign({userId:user._id},process.env.SECRET_KEY,{expiresIn:'1d'}); //token 
+        const token= await jwt.sign({userId:user._id},process.env.SECRET_KEY,{expiresIn:'1d'}); 
                                                                 //env.secrest_key means it carry secretkey which store in .env file
         //populate each post if in the posts array of user
         const populatedPosts = await Promise.all(
             user.posts.map(async (postId) => {
                 const post = await Post.findById(postId);
-                if(post.author.equals(user._id)){
+                if(post && post.author.equals(user._id)){
                     return post;
             }
             return null;
@@ -93,6 +94,7 @@ export const login = async (req, res) => {
         });
       } catch(error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
       }
 };
 export const logout = async (_, res) => {
@@ -103,6 +105,7 @@ export const logout = async (_, res) => {
         });
     } catch (error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 };  
 
@@ -110,13 +113,14 @@ export const getProfile = async (req, res) => {
     try{
         const userId = req.params.id; //req.params.id means jiska profile dekhna hai uska id //here params use to get id from url
         //difference between req.params.id and req.id is req.id means jo login hai uska id and req.params.id means jiska profile dekhna hai uska id
-        let user = await User.findById(userId).populate({path:'posts', createdAt:-1}).populate('bookmarks');
+        let user = await User.findById(userId).populate({path:'posts', options:{sort:{createdAt:-1}}}).populate('bookmarks');
         return res.status(200).json({
             success:true,
             user,
         });
     } catch (error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }   
 };
 
@@ -149,13 +153,14 @@ export const editProfile = async (req, res) => {
             });
     } catch (error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 };
 
 export const getSuggestedUsers = async (req, res) => {
     try{
         const SuggestedUsers = await User.find({_id: {$ne: req.id}}).select("-password"); 
-        if (!SuggestedUsers){                        // !=request id          //not give password
+        if (!SuggestedUsers){                      
             return res.status(404).json({
                 message: "No users found",
         
@@ -167,11 +172,12 @@ export const getSuggestedUsers = async (req, res) => {
             });
     } catch (error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 };
 export const followOrUnfollow = async (req, res) => {
     try{
-        const followKrneWala = req.id; // req.id means jo login hai uska id
+        const followKrneWala = req.id; 
         const jiskoFollowKrunga = req.params.id; 
          if(followKrneWala === jiskoFollowKrunga){
             return res.status(400).json({
@@ -210,6 +216,7 @@ export const followOrUnfollow = async (req, res) => {
             }
         } catch (error){
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }};
 
  

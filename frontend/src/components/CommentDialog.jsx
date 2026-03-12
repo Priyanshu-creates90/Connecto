@@ -33,14 +33,14 @@ const CommentDialog = ({ open, setOpen }) => {
   const sendMessageHandler = async () => {
     try {
       const res = await axios.post(
-        `https://connecto-1-psxd.onrender.com/api/v1/post/${selectedPost?._id}/comment`,
+        `${import.meta.env.VITE_API_URL}/api/v1/post/${selectedPost?._id}/comment`,
         { text },
         {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
-        }
+        },
       );
 
       if (res.data.success) {
@@ -50,7 +50,7 @@ const CommentDialog = ({ open, setOpen }) => {
         const updatedPostData = posts.map((p) =>
           p._id === selectedPost._id
             ? { ...p, comments: updatedCommentData }
-            : p
+            : p,
         );
         dispatch(setPosts(updatedPostData));
         toast.success(res.data.message);

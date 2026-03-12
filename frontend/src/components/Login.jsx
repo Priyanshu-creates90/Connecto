@@ -29,14 +29,14 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://connecto-1-psxd.onrender.com/api/v1/user/login",
+        `${import.meta.env.VITE_API_URL}/api/v1/user/login`,
         input,
         {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         dispatch(clearAllNotifications()); // Clear any existing notifications
@@ -50,7 +50,7 @@ const Login = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

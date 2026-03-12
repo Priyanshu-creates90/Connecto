@@ -41,13 +41,13 @@ const Profile = () => {
           setAuthUser({
             ...user,
             following: user.following.filter((id) => id !== userProfile._id),
-          })
+          }),
         );
         dispatch(
           setUserProfile({
             ...userProfile,
             followers: userProfile.followers.filter((id) => id !== user._id),
-          })
+          }),
         );
       } else {
         // Add to following and followers arrays
@@ -55,27 +55,27 @@ const Profile = () => {
           setAuthUser({
             ...user,
             following: [...(user.following || []), userProfile._id],
-          })
+          }),
         );
         dispatch(
           setUserProfile({
             ...userProfile,
             followers: [...(userProfile.followers || []), user._id],
-          })
+          }),
         );
       }
 
       const res = await axios.post(
-        `https://connecto-1-psxd.onrender.com/api/v1/user/followOrUnfollow/${userId}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/user/followOrUnfollow/${userId}`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.data.success) {
         // Refetch the profile to sync with backend
         const profileRes = await axios.get(
-          `https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`,
-          { withCredentials: true }
+          `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+          { withCredentials: true },
         );
         if (profileRes.data.success) {
           dispatch(setUserProfile(profileRes.data.user));
@@ -83,8 +83,8 @@ const Profile = () => {
 
         // Refetch logged-in user data to sync following array
         const userRes = await axios.get(
-          `https://connecto-1-psxd.onrender.com/api/v1/user/profile`,
-          { withCredentials: true }
+          `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
+          { withCredentials: true },
         );
         if (userRes.data.success) {
           dispatch(setAuthUser(userRes.data.user));
@@ -92,8 +92,8 @@ const Profile = () => {
 
         // Refetch suggested users to update follower counts
         const suggestedRes = await axios.get(
-          `https://connecto-1-psxd.onrender.com/api/v1/user/suggested`,
-          { withCredentials: true }
+          `${import.meta.env.VITE_API_URL}/api/v1/user/suggested`,
+          { withCredentials: true },
         );
         if (suggestedRes.data.success) {
           dispatch(setSuggestedUsers(suggestedRes.data.users));
@@ -107,16 +107,16 @@ const Profile = () => {
 
       // Revert optimistic update on error by refetching
       const profileRes = await axios.get(
-        `https://connecto-1-psxd.onrender.com/api/v1/user/${userId}/Profile`,
-        { withCredentials: true }
+        `${import.meta.env.VITE_API_URL}/api/v1/user/${userId}/Profile`,
+        { withCredentials: true },
       );
       if (profileRes.data.success) {
         dispatch(setUserProfile(profileRes.data.user));
       }
 
       const userRes = await axios.get(
-        `https://connecto-1-psxd.onrender.com/api/v1/user/profile`,
-        { withCredentials: true }
+        `${import.meta.env.VITE_API_URL}/api/v1/user/profile`,
+        { withCredentials: true },
       );
       if (userRes.data.success) {
         dispatch(setAuthUser(userRes.data.user));

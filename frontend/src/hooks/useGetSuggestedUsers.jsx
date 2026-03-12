@@ -9,8 +9,8 @@ const useGetSuggestedUsers = () => {
     const fetchSuggestedUsers = async () => {
       try {
         const res = await axios.get(
-          "https://connecto-1-psxd.onrender.com/api/v1/user/suggested",
-          { withCredentials: true }
+          `${import.meta.env.VITE_API_URL}/api/v1/user/suggested`,
+          { withCredentials: true },
         );
         if (res.data.success) {
           dispatch(setSuggestedUsers(res.data.users));

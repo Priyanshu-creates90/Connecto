@@ -26,14 +26,14 @@ const Singup = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://connecto-1-psxd.onrender.com/api/v1/user/register",
+        `${import.meta.env.VITE_API_URL}/api/v1/user/register`,
         input,
         {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         Navigate("/login");
@@ -46,7 +46,7 @@ const Singup = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ const Singup = () => {
           <Input
             type="text"
             name="username"
-            value={input.udername}
+            value={input.username}
             onChange={changeEventHandler}
             autoComplete="username"
             className="focus-visible:ring-transparent my-2"

@@ -16,7 +16,7 @@ const ChatPage = () => {
     return saved ? JSON.parse(saved) : {};
   });
   const { user, suggestedUsers, selectedUser } = useSelector(
-    (store) => store.auth
+    (store) => store.auth,
   );
   const { onlineUsers, messages } = useSelector((store) => store.chat);
   const dispatch = useDispatch();
@@ -60,14 +60,14 @@ const ChatPage = () => {
   const sendMessageHandler = async (receiverId) => {
     try {
       const res = await axios.post(
-        `https://connecto-1-psxd.onrender.com/api/v1/message/send/${receiverId}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/message/send/${receiverId}`,
         { textMessage },
         {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         dispatch(setMessages([...messages, res.data.newMessage]));

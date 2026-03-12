@@ -61,14 +61,14 @@ const CreatePost = ({ open, setOpen }) => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://connecto-1-psxd.onrender.com/api/v1/post/addpost",
+        `${import.meta.env.VITE_API_URL}/api/v1/post/addpost`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         dispatch(setPosts(res.data.post)); // Add single new post
@@ -76,7 +76,7 @@ const CreatePost = ({ open, setOpen }) => {
         handleClose();
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

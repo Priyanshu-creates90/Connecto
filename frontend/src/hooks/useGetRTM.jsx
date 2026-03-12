@@ -8,12 +8,13 @@ const useGetRTM = () => {
   const { socket } = useSelector((store) => store.socketio);
   const { messages } = useSelector((store) => store.chat);
   useEffect(() => {
-    socket?.on("newMessage", (newMessage) => {
+    const handleNewMessage = (newMessage) => {
       dispatch(setMessages([...messages, newMessage]));
-    });
-    return () => {
-      socket?.off("newMessage"); //if he cut then don't get new message
     };
-  }, [messages, setMessages]);
+    socket?.on("newMessage", handleNewMessage);
+    return () => {
+      socket?.off("newMessage", handleNewMessage);
+    };
+  }, [messages, socket, dispatch]);
 };
 export default useGetRTM;

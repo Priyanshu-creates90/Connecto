@@ -25,7 +25,7 @@ const LeftSidebar = () => {
   const location = useLocation();
   const { user } = useSelector((store) => store.auth);
   const { likeNotification } = useSelector(
-    (store) => store.realTimeNotification
+    (store) => store.realTimeNotification,
   );
   const { socket } = useSelector((store) => store.socketio);
   const dispatch = useDispatch();
@@ -34,10 +34,10 @@ const LeftSidebar = () => {
   const logoutHandler = async () => {
     try {
       const res = await axios.get(
-        "https://connecto-1-psxd.onrender.com/api/v1/user/logout",
+        `${import.meta.env.VITE_API_URL}/api/v1/user/logout`,
         {
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         dispatch(setAuthUser(null));
@@ -47,7 +47,7 @@ const LeftSidebar = () => {
         toast.success(res.data.message);
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
   const sidebarHandler = (textType) => {
@@ -192,7 +192,7 @@ const LeftSidebar = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           navigate(
-                                            `/profile/${notification.userId}`
+                                            `/profile/${notification.userId}`,
                                           );
                                         }}
                                       >
@@ -290,7 +290,7 @@ const LeftSidebar = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           navigate(
-                                            `/profile/${notification.userId}`
+                                            `/profile/${notification.userId}`,
                                           );
                                         }}
                                       >

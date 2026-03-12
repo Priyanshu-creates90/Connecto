@@ -48,6 +48,7 @@ export const addNewPost = async (req, res) => {
             });
             } catch (error) {
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     } 
 }
  export const getAllPost = async (req, res) => {
@@ -66,12 +67,13 @@ try {
     
 } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
 } 
 };
 export const getUserPost= async (req, res) => {
     try {
         const authorId = req.id;
-        const posts= await Post.find({author:authorId}).short({createdAt:-1})
+        const posts= await Post.find({author:authorId}).sort({createdAt:-1})
         .populate({path:"author",select:"username , profilePicture"})
         .populate({ path:"comments",sort:{createdAt:-1},
                     populate:{path:"author",select:"username , profilePicture"}
@@ -83,7 +85,7 @@ export const getUserPost= async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
 export const likePost = async (req, res) => {
@@ -121,7 +123,8 @@ export const likePost = async (req, res) => {
              });
 
     } catch (error) {
-       
+       console.log(error);
+       return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
  export const disLikePost = async (req, res) => {
@@ -160,7 +163,8 @@ export const likePost = async (req, res) => {
              });
 
     } catch (error) {
-       
+       console.log(error);
+       return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
 export const addComment = async (req, res) => {
@@ -191,7 +195,8 @@ export const addComment = async (req, res) => {
             comment,
         });
     } catch (error) {
-      console.log(error);  
+      console.log(error);
+      return res.status(500).json({ message: "Internal server error", success: false });
     }
 };
 export const getCommentsOfPost = async (req, res) => {
@@ -206,6 +211,7 @@ export const getCommentsOfPost = async (req, res) => {
     
    } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
    }
 }
 export const deletePost = async (req, res) => {
@@ -236,7 +242,8 @@ export const deletePost = async (req, res) => {
         });
         
     } catch (error) {
-        console.log(error); 
+        console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
 }
    export const bookmarkPost = async (req, res) => {
@@ -250,7 +257,6 @@ export const deletePost = async (req, res) => {
         if(user.bookmarks.includes(post._id)){
             // Post already bookmarked, remove it
             await user.updateOne({ $pull: { bookmarks: post._id } });
-            await user.save();
             return res.status(200).json({
                 type:'unsaved',
                 message: "Post removed from bookmarks",
@@ -259,7 +265,6 @@ export const deletePost = async (req, res) => {
  } else {
             // Post not bookmarked, add it
             await user.updateOne({ $addToSet: { bookmarks: post._id } });
-            await user.save();
             return res.status(200).json({
                 type:'saved',
                 message: "Post bookmarked successfully",
@@ -269,5 +274,6 @@ export const deletePost = async (req, res) => {
          
     } catch (error) {
         console.log(error);
+        return res.status(500).json({ message: "Internal server error", success: false });
     }
    }

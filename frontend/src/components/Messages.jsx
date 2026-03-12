@@ -132,17 +132,17 @@ const Messages = ({ selectedUser }) => {
   const handleDeleteMessage = async (deleteType) => {
     try {
       const res = await axios.delete(
-        `https://connecto-1-psxd.onrender.com/api/v1/message/delete/${contextMenu.messageId}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/message/delete/${contextMenu.messageId}`,
         {
           data: { deleteType },
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         // Remove message from local state
         const updatedMessages = messages.filter(
-          (msg) => msg._id !== contextMenu.messageId
+          (msg) => msg._id !== contextMenu.messageId,
         );
         dispatch(setMessages(updatedMessages));
       }

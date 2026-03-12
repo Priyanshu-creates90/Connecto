@@ -80,7 +80,7 @@ function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     if (user) {
-      const socketio = io("http://localhost:8000", {
+      const socketio = io(import.meta.env.VITE_API_URL, {
         query: {
           //query because we have to send user id in the backend
           userId: user?._id,

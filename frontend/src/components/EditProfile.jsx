@@ -49,14 +49,14 @@ const EditProfile = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://connecto-1-psxd.onrender.com/api/v1/user/profile/edit",
+        `${import.meta.env.VITE_API_URL}/api/v1/user/profile/edit`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
           withCredentials: true,
-        }
+        },
       );
       if (res.data.success) {
         const updatedUserData = {
@@ -71,7 +71,7 @@ const EditProfile = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.messasge);
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
