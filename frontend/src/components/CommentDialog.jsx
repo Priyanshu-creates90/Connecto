@@ -14,33 +14,64 @@ import { useDispatch, useSelector } from "react-redux";
 import Comment from "./Comment";
 import axios from "axios";
 import { toast } from "sonner";
-import { setPosts } from "@/redux/postSlice";
+import { setPosts, setSelectedPost } from "@/redux/postSlice";
 
 const CommentDialog = ({ open, setOpen }) => {
   const [text, setText] = useState("");
   const { selectedPost, posts } = useSelector((store) => store.post);
+  const { user } = useSelector((store) => store.auth);
   const [comment, setComment] = useState([]);
+  const [isSending, setIsSending] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (selectedPost) {
-      setComment(selectedPost.comments);
+      setComment(selectedPost.comments || []);
+    } else {
+      setComment([]);
     }
   }, [selectedPost]);
+
+  const syncCommentsInStore = (nextComments) => {
+    if (!selectedPost?._id) return;
+
+    const updatedPostData = posts.map((p) =>
+      p._id === selectedPost._id ? { ...p, comments: nextComments } : p,
+    );
+
+    dispatch(setPosts(updatedPostData));
+    dispatch(setSelectedPost({ ...selectedPost, comments: nextComments }));
+  };
+
   const changeEventHandler = (e) => {
-    const inputText = e.target.value;
-    if (inputText.trim()) {
-      setText(inputText);
-    } else {
-      setText("");
-    }
+    setText(e.target.value);
   };
 
   const sendMessageHandler = async () => {
+    const trimmedText = text.trim();
+    if (!trimmedText || !selectedPost?._id || !user?._id || isSending) return;
+
+    setIsSending(true);
+    const optimisticId = `temp-${Date.now()}`;
+    const previousComments = [...comment];
+    const optimisticComment = {
+      _id: optimisticId,
+      text: trimmedText,
+      author: {
+        _id: user._id,
+        username: user.username,
+        profilePicture: user.profilePicture,
+      },
+    };
+    const optimisticComments = [...previousComments, optimisticComment];
+    setComment(optimisticComments);
+    setText("");
+    syncCommentsInStore(optimisticComments);
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/post/${selectedPost?._id}/comment`,
-        { text },
+        { text: trimmedText },
         {
           headers: {
             "Content-Type": "application/json",
@@ -50,20 +81,21 @@ const CommentDialog = ({ open, setOpen }) => {
       );
 
       if (res.data.success) {
-        const updatedCommentData = [...comment, res.data.comment];
-        setComment(updatedCommentData);
-
-        const updatedPostData = posts.map((p) =>
-          p._id === selectedPost._id
-            ? { ...p, comments: updatedCommentData }
-            : p,
+        const finalComments = optimisticComments.map((item) =>
+          item._id === optimisticId ? res.data.comment : item,
         );
-        dispatch(setPosts(updatedPostData));
+        setComment(finalComments);
+        syncCommentsInStore(finalComments);
         toast.success(res.data.message);
-        setText("");
       }
     } catch (error) {
+      setComment(previousComments);
+      syncCommentsInStore(previousComments);
       console.log(error);
+      toast.error(error.response?.data?.message || "Failed to add comment");
+      setText(trimmedText);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -133,11 +165,11 @@ const CommentDialog = ({ open, setOpen }) => {
                   className="w-full outline-none border border-gray-300 p-2  rounded text-sm "
                 />
                 <Button
-                  disabled={!text.trim()}
+                  disabled={!text.trim() || isSending}
                   onClick={sendMessageHandler}
                   variant="outline"
                 >
-                  send{" "}
+                  {isSending ? "Sending..." : "Send"}
                 </Button>
               </div>
             </div>

@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 const Posts = () => {
   const { posts } = useSelector((store) => store.post);
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="w-full space-y-4 sm:space-y-5 stagger-fade">
       {posts.map((post) => (
         <Post key={post._id} post={post} />
       ))}

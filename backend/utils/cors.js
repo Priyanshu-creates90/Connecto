@@ -1,4 +1,9 @@
-const LOCAL_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173","https://connecto-1-psxd.onrender.com"];
+const LOCAL_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://connecto-1-psxd.onrender.com",
+];
+const LOCAL_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 const parseOrigins = (rawValue = "") =>
   rawValue
@@ -18,6 +23,10 @@ export const getAllowedOrigins = () => {
 
 export const isAllowedOrigin = (origin) => {
   if (!origin) {
+    return true;
+  }
+
+  if (LOCAL_ORIGIN_PATTERN.test(origin)) {
     return true;
   }
 

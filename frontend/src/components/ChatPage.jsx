@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { MessageCircleCode } from "lucide-react";
 import Messages from "./Messages";
 import axios from "axios";
-import { setMessages } from "@/redux/chatSlice";
+import { appendMessage } from "@/redux/chatSlice";
 
 const ChatPage = () => {
   const [textMessage, setTextMessage] = useState("");
@@ -21,19 +21,15 @@ const ChatPage = () => {
   const { onlineUsers, messages } = useSelector((store) => store.chat);
   const dispatch = useDispatch();
 
-  // Save to localStorage whenever userLastMessage changes
   useEffect(() => {
     localStorage.setItem("chatLastMessages", JSON.stringify(userLastMessage));
   }, [userLastMessage]);
 
-  // Update last message timestamp when messages change
   useEffect(() => {
     if (messages && messages.length > 0) {
       const lastMsg = messages[messages.length - 1];
       const senderId = lastMsg.senderId?._id || lastMsg.senderId;
       const receiverId = lastMsg.receiverId?._id || lastMsg.receiverId;
-
-      // Determine which user to update (the other person in conversation)
       const otherUserId = senderId === user?._id ? receiverId : senderId;
 
       if (otherUserId && otherUserId !== user?._id) {
@@ -48,12 +44,11 @@ const ChatPage = () => {
     }
   }, [messages, user?._id]);
 
-  // Sort suggested users based on last message timestamp
   const sortedUsers = React.useMemo(() => {
     return [...suggestedUsers].sort((a, b) => {
       const aTime = userLastMessage[a._id]?.timestamp || 0;
       const bTime = userLastMessage[b._id]?.timestamp || 0;
-      return bTime - aTime; // Most recent first
+      return bTime - aTime;
     });
   }, [suggestedUsers, userLastMessage]);
 
@@ -70,9 +65,8 @@ const ChatPage = () => {
         },
       );
       if (res.data.success) {
-        dispatch(setMessages([...messages, res.data.newMessage]));
+        dispatch(appendMessage(res.data.newMessage));
         setTextMessage("");
-        // Update last message timestamp for this user
         setUserLastMessage((prev) => ({
           ...prev,
           [receiverId]: {
@@ -93,27 +87,31 @@ const ChatPage = () => {
   }, [dispatch]);
 
   return (
-    <div className="flex w-full h-screen">
-      {/* Sidebar */}
+    <div className="w-full h-[calc(100vh-8rem)] flex gap-4 lg:gap-5">
       <section
         className={`${
-          selectedUser ? "hidden md:flex" : "flex"
-        } w-full md:w-1/4 my-4 md:my-8 flex-col`}
+          selectedUser ? "hidden lg:flex" : "flex"
+        } w-full lg:w-[340px] flex-col glass-panel p-3 lg:p-4`}
       >
-        <h1 className="font-bold mb-4 px-3 text-lg md:text-xl">
+        <p className="section-eyebrow px-3">Inbox</p>
+        <h1 className="font-bold mt-1 mb-3 px-3 text-lg md:text-xl">
           {user?.username}
         </h1>
-        <hr className="mb-4 border-gray-300" />
-        <div className="overflow-y-auto h-[calc(100vh-120px)]">
+        <div className="overflow-y-auto pr-1 h-full space-y-1">
           {sortedUsers.map((suggestedUser) => {
-            const isOnline = onlineUsers.includes(suggestedUser?._id); //include give true of false
+            const isOnline = onlineUsers.includes(suggestedUser?._id);
+            const selected = selectedUser?._id === suggestedUser?._id;
             return (
               <div
-                key={suggestedUser._id} //  Unique key added here
+                key={suggestedUser._id}
                 onClick={() => dispatch(setSelectedUser(suggestedUser))}
-                className="flex gap-3 items-center p-3 hover:bg-gray-50 cursor-pointer"
+                className={`flex gap-3 items-center p-3 rounded-xl cursor-pointer transition-colors ${
+                  selected
+                    ? "bg-teal-50 border border-teal-200"
+                    : "hover:bg-white/70 border border-transparent"
+                }`}
               >
-                <Avatar className="w-12 h-12 sm:w-14 sm:h-14">
+                <Avatar className="w-12 h-12 sm:w-14 sm:h-14 ring-1 ring-slate-200">
                   <AvatarImage src={suggestedUser?.profilePicture} />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
@@ -123,10 +121,10 @@ const ChatPage = () => {
                   </span>
                   <span
                     className={`text-xs font-bold ${
-                      isOnline ? "text-green-600" : "text-red-600"
+                      isOnline ? "text-teal-700" : "text-slate-400"
                     }`}
                   >
-                    {isOnline ? "online" : "offline"}
+                    {isOnline ? "online now" : "offline"}
                   </span>
                 </div>
               </div>
@@ -135,37 +133,39 @@ const ChatPage = () => {
         </div>
       </section>
 
-      {/* Chat Section */}
       {selectedUser ? (
-        <section className="flex-1 border-l border-l-gray-300 flex flex-col h-full">
-          <div className="flex gap-3 items-center px-3 py-2 border-b border-gray-300 sticky top-0 bg-white z-10">
+        <section className="flex-1 elevated-card flex flex-col h-full overflow-hidden">
+          <div className="flex gap-3 items-center px-4 py-3 border-b border-slate-200 bg-white/85 sticky top-0 z-10">
             <button
               onClick={() => dispatch(setSelectedUser(null))}
-              className="md:hidden mr-2 text-xl"
+              className="lg:hidden mr-1 text-xl text-slate-500"
             >
-              ←
+              {"<"}
             </button>
-            <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
+            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 ring-1 ring-slate-200">
               <AvatarImage src={selectedUser?.profilePicture} alt="profile" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm sm:text-base font-medium truncate">
+              <span className="text-sm sm:text-base font-semibold truncate">
                 {selectedUser?.username}
               </span>
+              <span className="text-xs text-slate-500">Direct thread</span>
             </div>
           </div>
           <Messages selectedUser={selectedUser} />
-          <div className="flex items-center p-3 sm:p-4 border-t border-t-gray-300">
-            <Input
-              value={textMessage}
-              onChange={(e) => setTextMessage(e.target.value)}
-              type="text"
-              className="flex-1 mr-2 focus-visible:ring-transparent text-sm sm:text-base"
-              placeholder="Messages..."
-            />
+          <div className="flex items-center gap-2 p-3 sm:p-4 border-t border-t-slate-200 bg-white/85">
+            <div className="input-shell flex-1">
+              <Input
+                value={textMessage}
+                onChange={(e) => setTextMessage(e.target.value)}
+                type="text"
+                className="focus-visible:ring-transparent text-sm sm:text-base border-none shadow-none bg-transparent px-0"
+                placeholder="Write a message..."
+              />
+            </div>
             <Button
-              className="bg-blue-500 hover:bg-blue-400 h-9 sm:h-10 text-sm sm:text-base"
+              className="bg-teal-700 hover:bg-teal-800 h-10 rounded-full px-5 text-sm sm:text-base"
               onClick={() => sendMessageHandler(selectedUser?._id)}
             >
               Send
@@ -173,11 +173,11 @@ const ChatPage = () => {
           </div>
         </section>
       ) : (
-        <div className="hidden md:flex flex-col items-center justify-center mx-auto px-4">
-          <MessageCircleCode className="w-24 h-24 sm:w-32 sm:h-32 my-4" />
-          <h1 className="font-medium text-base sm:text-lg">Your messages</h1>
-          <span className="text-sm sm:text-base text-gray-600">
-            Send a message to start a chat.
+        <div className="hidden lg:flex flex-1 elevated-card flex-col items-center justify-center px-4 text-center">
+          <MessageCircleCode className="w-20 h-20 my-3 text-teal-700" />
+          <h1 className="font-semibold text-lg">Start a conversation</h1>
+          <span className="text-sm text-slate-500 mt-1">
+            Pick someone from the left panel to start messaging.
           </span>
         </div>
       )}

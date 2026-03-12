@@ -1,16 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTrigger,
-  DialogTitle,
-} from "./ui/dialog";
-import { Bookmark, MessageCircle, MoreHorizontal } from "lucide-react";
-import React, { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "./ui/dialog";
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
-import { Send } from "lucide-react";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
 import CommentDialog from "./CommentDialog";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -23,58 +15,146 @@ const Post = ({ post }) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const { user } = useSelector((store) => store.auth);
-  const { posts } = useSelector((store) => store.post);
+  const { posts, selectedPost } = useSelector((store) => store.post);
   const dispatch = useDispatch();
-  const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
-  const [postLike, setPostLike] = useState(post.likes.length);
-  const [comment, setComment] = useState(post.comments);
+  const [liked, setLiked] = useState(
+    (post.likes || []).some((id) => String(id) === String(user?._id)),
+  );
+  const [postLike, setPostLike] = useState((post.likes || []).length);
+  const [comment, setComment] = useState(post.comments || []);
+  const [isLikePending, setIsLikePending] = useState(false);
+  const [isCommentPending, setIsCommentPending] = useState(false);
+  const [actionAnimation, setActionAnimation] = useState({
+    like: false,
+    comment: false,
+    share: false,
+    bookmark: false,
+  });
+  const actionTimeoutRef = useRef({});
 
-  const changeEventHandler = (e) => {
-    const inputText = e.target.value;
-    if (inputText.trim()) {
-      setText(inputText);
-    } else {
-      setText(" ");
+  useEffect(() => {
+    const likes = post.likes || [];
+    setLiked(likes.some((id) => String(id) === String(user?._id)));
+    setPostLike(likes.length);
+    setComment(post.comments || []);
+  }, [post, user?._id]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(actionTimeoutRef.current).forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+    };
+  }, []);
+
+  const triggerActionAnimation = (actionKey) => {
+    if (actionTimeoutRef.current[actionKey]) {
+      clearTimeout(actionTimeoutRef.current[actionKey]);
+    }
+
+    setActionAnimation((prev) => ({ ...prev, [actionKey]: false }));
+    window.requestAnimationFrame(() => {
+      setActionAnimation((prev) => ({ ...prev, [actionKey]: true }));
+      actionTimeoutRef.current[actionKey] = window.setTimeout(() => {
+        setActionAnimation((prev) => ({ ...prev, [actionKey]: false }));
+      }, 420);
+    });
+  };
+
+  const syncPostInStore = ({ likes, comments }) => {
+    const updatedPostData = posts.map((p) =>
+      p._id === post._id
+        ? {
+            ...p,
+            ...(likes ? { likes } : {}),
+            ...(comments ? { comments } : {}),
+          }
+        : p,
+    );
+
+    dispatch(setPosts(updatedPostData));
+
+    if (selectedPost?._id === post._id) {
+      dispatch(
+        setSelectedPost({
+          ...selectedPost,
+          ...(likes ? { likes } : {}),
+          ...(comments ? { comments } : {}),
+        }),
+      );
     }
   };
 
+  const changeEventHandler = (e) => {
+    const inputText = e.target.value;
+    setText(inputText);
+  };
+
   const likeOrDislikeHandler = async () => {
+    if (!user?._id || isLikePending) return;
+
+    triggerActionAnimation("like");
+    setIsLikePending(true);
+    const currentLikes = (posts.find((p) => p._id === post._id)?.likes ||
+      post.likes ||
+      []);
+    const hasLiked = currentLikes.some(
+      (id) => String(id) === String(user._id),
+    );
+    const nextLikes = hasLiked
+      ? currentLikes.filter((id) => String(id) !== String(user._id))
+      : [...currentLikes, user._id];
+
+    setLiked(!hasLiked);
+    setPostLike(nextLikes.length);
+    syncPostInStore({ likes: nextLikes });
+
     try {
-      const action = liked ? "dislike" : "like";
+      const action = hasLiked ? "dislike" : "like";
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/v1/post/${post._id}/${action}`,
         { withCredentials: true },
       );
       if (res.data.success) {
-        const updatedLikes = liked ? postLike - 1 : postLike + 1;
-        setPostLike(updatedLikes);
-        setLiked(!liked);
-
-        //update our post
-        const updatedPostData = posts.map((p) =>
-          p._id === post._id
-            ? {
-                ...p,
-                likes: liked
-                  ? p.likes.filter((id) => id !== user._id)
-                  : [...p.likes, user._id],
-              }
-            : p,
-        );
-        dispatch(setPosts(updatedPostData));
-
         toast.success(res.data.message);
       }
     } catch (error) {
+      setLiked(hasLiked);
+      setPostLike(currentLikes.length);
+      syncPostInStore({ likes: currentLikes });
       console.log(error);
+      toast.error(error.response?.data?.message || "Failed to update like");
+    } finally {
+      setIsLikePending(false);
     }
   };
 
   const commentHandler = async () => {
+    const trimmedText = text.trim();
+    if (!trimmedText || isCommentPending || !user?._id) return;
+
+    triggerActionAnimation("comment");
+    setIsCommentPending(true);
+    const optimisticId = `temp-${Date.now()}`;
+    const previousComments = [...comment];
+    const optimisticComment = {
+      _id: optimisticId,
+      text: trimmedText,
+      author: {
+        _id: user._id,
+        username: user.username,
+        profilePicture: user.profilePicture,
+      },
+    };
+    const optimisticComments = [...previousComments, optimisticComment];
+    setComment(optimisticComments);
+    setText("");
+    syncPostInStore({ comments: optimisticComments });
+
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/v1/post/${post._id}/comment`,
-        { text },
+        { text: trimmedText },
         {
           headers: {
             "Content-Type": "application/json",
@@ -84,19 +164,21 @@ const Post = ({ post }) => {
       );
       console.log(res.data);
       if (res.data.success) {
-        const updatedCommentData = [...comment, res.data.comment];
-        setComment(updatedCommentData);
-
-        const updatedPostData = posts.map((p) =>
-          p._id === post._id ? { ...p, comments: updatedCommentData } : p,
+        const finalComments = optimisticComments.map((item) =>
+          item._id === optimisticId ? res.data.comment : item,
         );
-
-        dispatch(setPosts(updatedPostData));
+        setComment(finalComments);
+        syncPostInStore({ comments: finalComments });
         toast.success(res.data.message);
-        setText("");
       }
     } catch (error) {
+      setComment(previousComments);
+      syncPostInStore({ comments: previousComments });
       console.log(error);
+      toast.error(error.response?.data?.message || "Failed to add comment");
+      setText(trimmedText);
+    } finally {
+      setIsCommentPending(false);
     }
   };
 
@@ -120,6 +202,7 @@ const Post = ({ post }) => {
   };
 
   const bookmarkHandler = async () => {
+    triggerActionAnimation("bookmark");
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/v1/post/${post?._id}/bookmark`,
@@ -132,24 +215,53 @@ const Post = ({ post }) => {
       console.log(error);
     }
   };
+
+  const sharePostHandler = async () => {
+    triggerActionAnimation("share");
+    const shareUrlObj = new URL(window.location.href);
+    shareUrlObj.searchParams.set("post", post._id);
+    const shareUrl = shareUrlObj.toString();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${post.author?.username}'s post`,
+          text: post.caption || "Check out this post",
+          url: shareUrl,
+        });
+        toast.success("Post shared");
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Post link copied");
+    } catch {
+      toast.error("Could not share post");
+    }
+  };
+
   return (
-    <div className="my-8 w-full max-w-sm mx-auto">
-      <div className="flex  items-center justify-between">
+    <article className="my-4 sm:my-5 w-full max-w-[640px] mx-auto rounded-[1.2rem] border border-white/75 bg-[linear-gradient(170deg,rgba(255,255,255,0.96),rgba(248,252,251,0.92))] shadow-[0_16px_34px_rgba(15,23,42,0.1)] p-3 sm:p-4 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to={`/profile/${post.author?._id}`}>
-            <Avatar>
+            <Avatar className="ring-2 ring-white shadow-sm h-11 w-11">
               <AvatarImage src={post.author?.profilePicture} alt="post_image" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </Link>
           <div className=" flex items-center gap-3">
             <Link to={`/profile/${post.author?._id}`}>
-              <h1 className="hover:underline cursor-pointer">
+              <h1 className="hover:underline cursor-pointer text-slate-900 font-semibold tracking-tight">
                 {post.author?.username}
               </h1>
             </Link>
             {user?._id === post.author._id && (
-              <Badge className="bg-gray-100" variant="secondary">
+              <Badge className="bg-teal-50 text-teal-700 border border-teal-200" variant="secondary">
                 Author
               </Badge>
             )}
@@ -161,14 +273,11 @@ const Post = ({ post }) => {
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center text-sm text-center bg-white">
             <DialogTitle className="sr-only">Post options</DialogTitle>
-            <DialogDescription className="sr-only">
-              More actions for this post.
-            </DialogDescription>
             {/* Show Unfollow only for other users' posts */}
             {user?._id !== post?.author._id && (
               <Button
                 variant="ghost"
-                className="cursor-pointer w-fit text-[#ED4956] bg-blackfont-bold"
+                className="cursor-pointer w-fit text-[#ED4956] font-bold"
               >
                 Unfollow
               </Button>
@@ -189,45 +298,71 @@ const Post = ({ post }) => {
           </DialogContent>
         </Dialog>
       </div>
-      <img
-        className="rounded-sm my-2 w-full aspect-square object-cover"
-        src={post.image}
-        alt="post_img"
-      />
 
-      <div className="flex items-center justify-between my-2">
-        <div className="flex items-center gap-3">
-          {liked ? (
-            <FaHeart
-              onClick={likeOrDislikeHandler}
-              size={"24"}
-              className=" cursor-pointer text-red-600"
+      <div className="mt-2.5 rounded-xl overflow-hidden border border-white/80 shadow-[0_12px_26px_rgba(15,23,42,0.14)] bg-white/70">
+        <img
+          className="w-full aspect-[4/3] sm:aspect-[5/4] lg:aspect-[16/10] object-cover"
+          src={post.image}
+          alt="post_img"
+        />
+      </div>
+
+      <div className="flex items-center justify-between mt-2.5">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={likeOrDislikeHandler}
+            disabled={isLikePending}
+            className={`icon-chip action-btn ${
+              liked ? "border-[#f2b79a] bg-orange-50" : ""
+            } ${actionAnimation.like ? "action-heart-pop" : ""}`}
+            aria-label={liked ? "Unlike post" : "Like post"}
+          >
+            <Heart
+              size={18}
+              strokeWidth={2.1}
+              className={`transition-all ${
+                liked
+                  ? "text-[#e5484d] fill-[#e5484d] scale-110 drop-shadow-[0_0_10px_rgba(229,72,77,0.35)]"
+                  : "text-slate-700"
+              }`}
             />
-          ) : (
-            <FaRegHeart
-              onClick={likeOrDislikeHandler}
-              size={"22px"}
-              className="cursor-pointer hover:text-gray-600"
-            />
-          )}
-          <MessageCircle
+          </button>
+          <button
+            type="button"
             onClick={() => {
+              triggerActionAnimation("comment");
               dispatch(setSelectedPost(post));
               setOpen(true);
             }}
-            className="cursor-pointer hover:text-gray-600"
-          />
-          <Send className="cursor-pointer hover:text-gray-600 " />
+            className={`icon-chip action-btn ${actionAnimation.comment ? "action-pop" : ""}`}
+            aria-label="Open comments"
+          >
+            <MessageCircle size={17} />
+          </button>
+          <button
+            type="button"
+            onClick={sharePostHandler}
+            className={`icon-chip action-btn ${actionAnimation.share ? "action-share-pop" : ""}`}
+            aria-label="Share post"
+          >
+            <Share2 size={17} />
+          </button>
         </div>
-        <Bookmark
+        <button
+          type="button"
           onClick={bookmarkHandler}
-          className="cursor-pointer hover:text-gray-600"
-        />
+          className={`icon-chip action-btn ${actionAnimation.bookmark ? "action-bookmark-pop" : ""}`}
+          aria-label="Bookmark post"
+        >
+          <Bookmark size={17} />
+        </button>
       </div>
-      <span className="font-medium block mb-2">{postLike} likes</span>
-      <p>
-        <span className="font-medium mr-2">{post.author?.username}</span>
-        {post.caption}
+
+      <span className="font-medium block mt-2.5 text-slate-700">{postLike} likes</span>
+      <p className="mt-1 text-slate-700">
+        <span className="font-medium mr-2 text-slate-900">{post.author?.username}</span>
+        {post.caption || ""}
       </p>
       {comment.length > 0 && (
         <span
@@ -242,24 +377,25 @@ const Post = ({ post }) => {
       )}
 
       <CommentDialog open={open} setOpen={setOpen} />
-      <div className="flex items-center justify-between">
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          value={text}
-          onChange={changeEventHandler}
-          className="outline-none text-sm w-full"
-        />
-        {text && (
-          <span
-            onClick={commentHandler}
-            className="text-[#3BADF9] cursor-pointer"
-          >
-            Post
-          </span>
-        )}
+      <div className="mt-2.5 flex items-center gap-2">
+        <div className="input-shell flex-1">
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={text}
+            onChange={changeEventHandler}
+            className="outline-none text-sm w-full bg-transparent"
+          />
+        </div>
+        <Button
+          onClick={commentHandler}
+          disabled={!text.trim() || isCommentPending}
+          className="rounded-full bg-teal-700 hover:bg-teal-800 text-white px-4"
+        >
+          {isCommentPending ? "Posting..." : "Post"}
+        </Button>
       </div>
-    </div>
+    </article>
   );
 };
 

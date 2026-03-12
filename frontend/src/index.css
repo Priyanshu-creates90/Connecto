@@ -1,3 +1,501 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
+:root {
+  --bg-base: #e8f2ef;
+  --bg-wash: #d4e5dd;
+  --bg-sand: #f0dfc3;
+  --bg-mint: #c3ddd3;
+  --bg-blue: #caddeb;
+  --bg-cream: #f9f2e6;
+  --aura-teal: rgba(13, 148, 136, 0.44);
+  --aura-orange: rgba(217, 119, 6, 0.36);
+  --aura-sky: rgba(2, 132, 199, 0.3);
+  --aura-emerald: rgba(5, 150, 105, 0.24);
+  --ink-900: #18222f;
+  --ink-700: #475569;
+  --ink-500: #64748b;
+  --panel: rgba(255, 255, 255, 0.74);
+  --panel-strong: #fffdf8;
+  --stroke: rgba(24, 34, 47, 0.12);
+  --brand: #0f766e;
+  --brand-strong: #115e59;
+  --accent: #de7a35;
+  --danger: #c2410c;
+  --ring: rgba(15, 118, 110, 0.22);
+  --shadow-soft: 0 16px 34px rgba(15, 23, 42, 0.14);
+  --shadow-hard: 0 26px 56px rgba(15, 23, 42, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink-900);
+  font-family: "Outfit", sans-serif;
+  background:
+    radial-gradient(1200px 760px at -10% -16%, var(--aura-teal), transparent 58%),
+    radial-gradient(1000px 640px at 114% -12%, var(--aura-orange), transparent 56%),
+    radial-gradient(1120px 700px at 48% 116%, var(--aura-sky), transparent 60%),
+    radial-gradient(860px 520px at 28% 54%, var(--aura-emerald), transparent 62%),
+    conic-gradient(
+      from 228deg at 52% 48%,
+      #edf6f2 0deg,
+      #d9e8df 105deg,
+      #f4e4cc 198deg,
+      #eff0eb 262deg,
+      #d4e2ef 322deg,
+      #edf6f2 360deg
+    ),
+    linear-gradient(
+      128deg,
+      var(--bg-base) 0%,
+      var(--bg-mint) 36%,
+      var(--bg-sand) 74%,
+      var(--bg-cream) 100%
+    );
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(24, 34, 47, 0.035) 0 1px,
+      transparent 1px 62px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(24, 34, 47, 0.035) 0 1px,
+      transparent 1px 62px
+    );
+  opacity: 0.42;
+  mask-image: radial-gradient(circle at center, black 24%, transparent 86%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 64%),
+    radial-gradient(rgba(18, 26, 38, 0.16) 0.56px, transparent 0.56px),
+    radial-gradient(rgba(255, 255, 255, 0.34) 0.56px, transparent 0.56px);
+  background-size: auto, 3px 3px, 4px 4px;
+  background-position: center, 0 0, 1px 1px;
+  opacity: 0.14;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: -16%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(66px);
+  mix-blend-mode: soft-light;
+  will-change: transform, opacity;
+}
+
+.app-shell::before {
+  background:
+    radial-gradient(
+      44% 36% at 16% 30%,
+      rgba(15, 118, 110, 0.34),
+      transparent
+    ),
+    radial-gradient(
+      40% 32% at 80% 24%,
+      rgba(249, 115, 22, 0.3),
+      transparent
+    ),
+    radial-gradient(
+      36% 30% at 48% 78%,
+      rgba(14, 116, 144, 0.22),
+      transparent
+    );
+  opacity: 0.8;
+  animation: drift-aura-a 24s ease-in-out infinite alternate;
+}
+
+.app-shell::after {
+  background:
+    radial-gradient(
+      34% 30% at 76% 74%,
+      rgba(14, 116, 144, 0.24),
+      transparent
+    ),
+    radial-gradient(
+      38% 30% at 26% 82%,
+      rgba(56, 189, 248, 0.2),
+      transparent
+    ),
+    radial-gradient(
+      32% 26% at 58% 12%,
+      rgba(245, 158, 11, 0.24),
+      transparent
+    );
+  opacity: 0.74;
+  animation: drift-aura-b 30s ease-in-out infinite alternate;
+}
+
+.app-main {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-panel {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.88),
+      rgba(255, 255, 255, 0.66)
+    );
+  border: 1px solid rgba(24, 34, 47, 0.14);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: var(--shadow-soft);
+}
+
+.elevated-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(255, 253, 248, 0.94)
+    );
+  border: 1px solid rgba(24, 34, 47, 0.12);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  border-radius: 0.95rem;
+  border: 1px solid transparent;
+  padding: 0.72rem 0.88rem;
+  color: var(--ink-700);
+  transition: all 0.25s ease;
+}
+
+.nav-chip:hover {
+  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.74);
+  border-color: rgba(24, 34, 47, 0.08);
+  color: var(--ink-900);
+}
+
+.nav-chip.is-active {
+  background: linear-gradient(120deg, rgba(15, 118, 110, 0.14), rgba(15, 118, 110, 0.08));
+  border-color: rgba(15, 118, 110, 0.42);
+  color: var(--brand-strong);
+}
+
+.section-eyebrow {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-500);
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--brand-strong);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.icon-chip {
+  border: 1px solid rgba(24, 34, 47, 0.12);
+  border-radius: 999px;
+  width: 2.35rem;
+  height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--ink-700);
+  transition: all 0.2s ease;
+}
+
+.icon-chip:hover {
+  border-color: rgba(15, 118, 110, 0.45);
+  color: var(--brand-strong);
+  transform: translateY(-1px);
+}
+
+.action-btn {
+  transform-origin: center;
+}
+
+.action-pop {
+  animation: action-pop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.action-heart-pop {
+  animation: action-heart-pop 0.44s cubic-bezier(0.22, 0.9, 0.32, 1.18);
+}
+
+.action-share-pop {
+  animation: action-share-pop 0.42s cubic-bezier(0.2, 0.88, 0.3, 1);
+}
+
+.action-bookmark-pop {
+  animation: action-bookmark-pop 0.42s cubic-bezier(0.2, 0.86, 0.28, 1);
+}
+
+.input-shell {
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  padding: 0.46rem 0.88rem;
+  background: rgba(255, 255, 255, 0.78);
+  transition: all 0.2s ease;
+}
+
+.input-shell:focus-within {
+  border-color: rgba(15, 118, 110, 0.52);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.feed-post {
+  width: min(100%, 42rem);
+}
+
+.post-card {
+  border-radius: 1.35rem;
+}
+
+.post-media-shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(24, 34, 47, 0.08);
+  padding: 0.18rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.post-media-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0.18rem;
+  pointer-events: none;
+  border-radius: calc(1.15rem - 0.18rem);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+}
+
+.post-media-image {
+  width: 100%;
+  display: block;
+  border-radius: calc(1.15rem - 0.18rem);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.animate-rise {
+  animation: rise-in 0.45s ease both;
+}
+
+.stagger-fade > * {
+  animation: rise-in 0.45s ease both;
+}
+
+.stagger-fade > *:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.stagger-fade > *:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.stagger-fade > *:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.pulse-dot {
+  animation: pulse-glow 1.8s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell::before,
+  .app-shell::after {
+    animation: none;
+  }
+
+  .action-pop,
+  .action-heart-pop,
+  .action-share-pop,
+  .action-bookmark-pop {
+    animation: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-shell::before,
+  .app-shell::after {
+    inset: -22%;
+    filter: blur(74px);
+    opacity: 0.6;
+  }
+
+  .post-media-image {
+    aspect-ratio: 5 / 4;
+  }
+}
+
+@media (max-width: 640px) {
+  .post-card {
+    border-radius: 1.2rem;
+  }
+
+  .post-media-shell {
+    padding: 0.16rem;
+    border-radius: 1rem;
+  }
+
+  .post-media-shell::after {
+    inset: 0.16rem;
+    border-radius: calc(1rem - 0.16rem);
+  }
+
+  .post-media-image {
+    border-radius: calc(1rem - 0.16rem);
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(222, 122, 53, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(222, 122, 53, 0);
+  }
+}
+
+@keyframes drift-aura-a {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1) rotate(-1.5deg);
+  }
+  to {
+    transform: translate3d(3%, 2%, 0) scale(1.08) rotate(1deg);
+  }
+}
+
+@keyframes drift-aura-b {
+  from {
+    transform: translate3d(2%, -2%, 0) scale(1) rotate(1deg);
+  }
+  to {
+    transform: translate3d(-3%, 3%, 0) scale(1.1) rotate(-1.5deg);
+  }
+}
+
+@keyframes action-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.86);
+  }
+  65% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes action-heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.78);
+  }
+  58% {
+    transform: scale(1.2) rotate(-8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes action-share-pop {
+  0% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+  45% {
+    transform: translateX(2px) translateY(-2px) rotate(-15deg) scale(1.1);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes action-bookmark-pop {
+  0% {
+    transform: perspective(300px) rotateY(0deg) scale(1);
+  }
+  45% {
+    transform: perspective(300px) rotateY(24deg) scale(1.07);
+  }
+  100% {
+    transform: perspective(300px) rotateY(0deg) scale(1);
+  }
+}

@@ -15,6 +15,8 @@ import { setSocket } from "./redux/socketSlice";
 import { setOnlineUsers } from "./redux/chatSlice";
 import { setLikeNotification } from "./redux/rtnSlice";
 import ProtectedRoutes from "./components/ProtectedRoutes";
+import { applyRealtimeLikeUpdate } from "./redux/postSlice";
+import { applyRealtimeLikeUpdateToProfile } from "./redux/authSlice";
 
 const browserRouter = createBrowserRouter([
   {
@@ -94,6 +96,8 @@ function App() {
       //notification
       socketio.on("notification", (notification) => {
         dispatch(setLikeNotification(notification));
+        dispatch(applyRealtimeLikeUpdate(notification));
+        dispatch(applyRealtimeLikeUpdateToProfile(notification));
       });
       return () => {
         //cleanup ,when user left the page it show ofline

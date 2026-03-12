@@ -6,7 +6,8 @@ import { defineConfig, loadEnv } from "vite"
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "")
-  const apiUrl = (env.VITE_API_URL || "").trim()
+  const fallbackApiUrl = mode === "development" ? "http://localhost:8000" : ""
+  const apiUrl = (env.VITE_API_URL || fallbackApiUrl).trim()
 
   return {
     plugins: [react(), tailwindcss()],

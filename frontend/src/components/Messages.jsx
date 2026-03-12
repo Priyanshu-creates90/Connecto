@@ -159,17 +159,17 @@ const Messages = ({ selectedUser }) => {
   };
 
   return (
-    <div className="overflow-y-auto flex-1 p-4">
+    <div className="overflow-y-auto flex-1 p-4 sm:p-5 bg-gradient-to-b from-white/45 to-transparent">
       <div className="flex justify-center">
-        <div className="flex flex-col items-center justify-center">
-          <Avatar className="h-20 w-20">
+        <div className="flex flex-col items-center justify-center glass-panel px-4 py-3">
+          <Avatar className="h-16 w-16 ring-1 ring-slate-200">
             <AvatarImage src={selectedUser?.profilePicture} alt="profile" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <span>{selectedUser?.username}</span>
+          <span className="mt-2 font-semibold">{selectedUser?.username}</span>
           <Link to={`/profile/${selectedUser?._id}`}>
             <Button
-              className="h-8 my-2 bg-slate-200 cursor-pointer"
+              className="h-8 mt-2 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
               variant="secondary"
             >
               View profile
@@ -209,8 +209,8 @@ const Messages = ({ selectedUser }) => {
                     isSentByMe ? "cursor-pointer select-none" : ""
                   } ${
                     isSentByMe
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-black"
+                      ? "bg-teal-700 text-white rounded-br-sm"
+                      : "bg-white border border-slate-200 text-slate-800 rounded-bl-sm"
                   }`}
                 >
                   {msg.message}

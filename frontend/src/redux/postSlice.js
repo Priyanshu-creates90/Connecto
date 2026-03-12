@@ -17,9 +17,43 @@ import { createSlice } from "@reduxjs/toolkit";
         },
         setSelectedPost:(state,action) =>{
             state.selectedPost=action.payload;
+        },
+        applyRealtimeLikeUpdate:(state,action) =>{
+            const { postId, userId, type } = action.payload || {};
+            if (!postId || !userId || (type !== "like" && type !== "dislike")) {
+                return;
+            }
+
+            const updateLikes = (likes = []) => {
+                const normalizedUserId = String(userId);
+                const hasLiked = likes.some((id) => String(id) === normalizedUserId);
+
+                if (type === "like" && !hasLiked) {
+                    return [...likes, userId];
+                }
+
+                if (type === "dislike" && hasLiked) {
+                    return likes.filter((id) => String(id) !== normalizedUserId);
+                }
+
+                return likes;
+            };
+
+            state.posts = state.posts.map((post) =>
+                post?._id === postId
+                    ? { ...post, likes: updateLikes(post.likes) }
+                    : post
+            );
+
+            if (state.selectedPost?._id === postId) {
+                state.selectedPost = {
+                    ...state.selectedPost,
+                    likes: updateLikes(state.selectedPost.likes),
+                };
+            }
         }
     }
  })
- export const {setPosts,setSelectedPost} = postSlice.actions;
+ export const {setPosts,setSelectedPost,applyRealtimeLikeUpdate} = postSlice.actions;
 
  export default postSlice.reducer;
