@@ -1,9 +1,10 @@
 import  User   from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 import { Post } from "../models/post.model.js";
+import sharp from "sharp";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 
 
 // Register a new user
@@ -153,11 +154,6 @@ export const editProfile = async (req, res) => {
         const userId = req.id;
         const {bio,gender} = req.body;
         const profilePicture = req.file ;
-        let cloudResponse;
-        if(profilePicture){
-            const fileUri = getDataUri(profilePicture);
-            cloudResponse = await cloudinary.uploader.upload(fileUri);
-        }
         const user= await User.findById(userId).select("-password");
         if (!user){
             return res.status(404).json({
@@ -165,9 +161,37 @@ export const editProfile = async (req, res) => {
                 success: false
             });
          };
-         if(bio) user.bio = bio;
-            if(gender) user.gender = gender;
-            if(profilePicture) user.profilePicture = cloudResponse.secure_url;
+        if (typeof bio === "string") {
+            user.bio = bio.trim();
+        }
+
+        if (typeof gender === "string" && gender !== "") {
+            const normalizedGender = gender.toLowerCase();
+            const allowedGenders = ["male", "female", "other"];
+
+            if (!allowedGenders.includes(normalizedGender)) {
+                return res.status(400).json({
+                    message: "Invalid gender value",
+                    success: false,
+                });
+            }
+            user.gender = normalizedGender;
+        }
+
+        if (profilePicture) {
+            const optimizedImageBuffer = await sharp(profilePicture.buffer)
+                .resize({ width: 512, height: 512, fit: "cover" })
+                .toFormat("jpeg", { quality: 80 })
+                .toBuffer();
+
+            const fileUri = `data:image/jpeg;base64,${optimizedImageBuffer.toString("base64")}`;
+            const cloudResponse = await cloudinary.uploader.upload(fileUri, {
+                resource_type: "image",
+                folder: "socialmedia/profile",
+                timeout: 120000,
+            });
+            user.profilePicture = cloudResponse.secure_url;
+        }
 
             await user.save();
             return res.status(200).json({
@@ -177,6 +201,19 @@ export const editProfile = async (req, res) => {
             });
     } catch (error){
         console.log(error);
+        const uploadError = error?.error ?? error;
+        if (uploadError?.name === "TimeoutError" || uploadError?.http_code === 499) {
+            return res.status(504).json({
+                message: "Profile image upload timed out. Please retry with a smaller image.",
+                success: false,
+            });
+        }
+        if (error?.name === "ValidationError") {
+            return res.status(400).json({
+                message: "Invalid profile data",
+                success: false,
+            });
+        }
         return res.status(500).json({ message: "Internal server error", success: false });
     }
 };
@@ -218,7 +255,9 @@ export const followOrUnfollow = async (req, res) => {
                 });
             }
             //now check i have to follow or unfollow
-            const isFollowing = user.following.includes(jiskoFollowKrunga);
+            const isFollowing = user.following.some(
+                (id) => id.toString() === jiskoFollowKrunga
+            );
             if (isFollowing){
                 await Promise.all([
                     User.updateOne({_id: followKrneWala},{$pull: {following: jiskoFollowKrunga}}),
@@ -233,6 +272,23 @@ export const followOrUnfollow = async (req, res) => {
                     User.updateOne({_id: followKrneWala},{$push: {following: jiskoFollowKrunga}}),
                     User.updateOne({_id: jiskoFollowKrunga},{$push: {followers: followKrneWala}}),
                 ])
+
+                const targetUserSocketId = getReceiverSocketId(jiskoFollowKrunga);
+                if (targetUserSocketId) {
+                    const followerDetails = {
+                        _id: user._id,
+                        username: user.username,
+                        profilePicture: user.profilePicture,
+                    };
+                    io.to(targetUserSocketId).emit("notification", {
+                        type: "follow",
+                        userId: followKrneWala,
+                        userDetails: followerDetails,
+                        message: `${user.username} started following you`,
+                        timestamp: new Date().toISOString(),
+                    });
+                }
+
                 return res.status(200).json({
                     message: `You are now following ${targetUser.username}`,
                     success: true,

@@ -173,7 +173,11 @@ const LeftSidebar = ({ isCollapsed = false, onToggleCollapse }) => {
                   >
                     {notification.userDetails?.username}
                   </span>
-                  <span className="text-slate-500 ml-1">liked your post</span>
+                  <span className="text-slate-500 ml-1">
+                    {notification.type === "follow"
+                      ? "started following you"
+                      : "liked your post"}
+                  </span>
                 </p>
               </div>
             </div>

@@ -17,10 +17,6 @@ const Post = ({ post }) => {
   const { user } = useSelector((store) => store.auth);
   const { posts, selectedPost } = useSelector((store) => store.post);
   const dispatch = useDispatch();
-  const [liked, setLiked] = useState(
-    (post.likes || []).some((id) => String(id) === String(user?._id)),
-  );
-  const [postLike, setPostLike] = useState((post.likes || []).length);
   const [comment, setComment] = useState(post.comments || []);
   const [isLikePending, setIsLikePending] = useState(false);
   const [isCommentPending, setIsCommentPending] = useState(false);
@@ -31,13 +27,13 @@ const Post = ({ post }) => {
     bookmark: false,
   });
   const actionTimeoutRef = useRef({});
+  const likes = post.likes || [];
+  const liked = likes.some((id) => String(id) === String(user?._id));
+  const postLike = likes.length;
 
   useEffect(() => {
-    const likes = post.likes || [];
-    setLiked(likes.some((id) => String(id) === String(user?._id)));
-    setPostLike(likes.length);
     setComment(post.comments || []);
-  }, [post, user?._id]);
+  }, [post]);
 
   useEffect(() => {
     return () => {
@@ -66,8 +62,8 @@ const Post = ({ post }) => {
       p._id === post._id
         ? {
             ...p,
-            ...(likes ? { likes } : {}),
-            ...(comments ? { comments } : {}),
+            ...(likes !== undefined ? { likes } : {}),
+            ...(comments !== undefined ? { comments } : {}),
           }
         : p,
     );
@@ -78,8 +74,8 @@ const Post = ({ post }) => {
       dispatch(
         setSelectedPost({
           ...selectedPost,
-          ...(likes ? { likes } : {}),
-          ...(comments ? { comments } : {}),
+          ...(likes !== undefined ? { likes } : {}),
+          ...(comments !== undefined ? { comments } : {}),
         }),
       );
     }
@@ -105,8 +101,6 @@ const Post = ({ post }) => {
       ? currentLikes.filter((id) => String(id) !== String(user._id))
       : [...currentLikes, user._id];
 
-    setLiked(!hasLiked);
-    setPostLike(nextLikes.length);
     syncPostInStore({ likes: nextLikes });
 
     try {
@@ -119,8 +113,6 @@ const Post = ({ post }) => {
         toast.success(res.data.message);
       }
     } catch (error) {
-      setLiked(hasLiked);
-      setPostLike(currentLikes.length);
       syncPostInStore({ likes: currentLikes });
       console.log(error);
       toast.error(error.response?.data?.message || "Failed to update like");

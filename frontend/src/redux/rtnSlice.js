@@ -48,6 +48,17 @@ const rtnSlice= createSlice({
                     );
                     break;
 
+                case 'follow':
+                    // Keep one follow notification per user
+                    state.likeNotification = state.likeNotification.filter(
+                        item => !(item.userId === action.payload.userId && item.type === 'follow')
+                    );
+                    state.likeNotification.unshift({
+                        ...action.payload,
+                        timestamp: action.payload.timestamp || new Date().toISOString(),
+                    });
+                    break;
+
                 default:
                     break;
             }

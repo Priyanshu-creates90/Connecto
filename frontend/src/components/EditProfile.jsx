@@ -22,28 +22,30 @@ const EditProfile = () => {
   const { user } = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState({
-    profilePhoto: user?.profilePicture,
-    bio: user?.bio,
-    gender: user?.gender,
+    profilePhoto: null,
+    bio: user?.bio ?? "",
+    gender: user?.gender ?? "",
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const fileChangeHandler = (e) => {
     const file = e.target.files?.[0];
-    if (file) setInput({ ...input, profilePhoto: file });
+    if (file) setInput((prev) => ({ ...prev, profilePhoto: file }));
   };
 
   const selectChangeHandler = (value) => {
-    setInput({ ...input, gender: value });
+    setInput((prev) => ({ ...prev, gender: value }));
   };
 
   const editProfileHandler = async () => {
     console.log(input);
     const formData = new FormData();
-    formData.append("bio", input.bio);
-    formData.append("gender", input.gender);
-    if (input.profilePhoto) {
+    formData.append("bio", input.bio ?? "");
+    if (input.gender) {
+      formData.append("gender", input.gender);
+    }
+    if (input.profilePhoto instanceof File) {
       formData.append("profilePhoto", input.profilePhoto);
     }
     try {
@@ -52,9 +54,6 @@ const EditProfile = () => {
         `${import.meta.env.VITE_API_URL}/api/v1/user/profile/edit`,
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
           withCredentials: true,
         },
       );
@@ -63,7 +62,7 @@ const EditProfile = () => {
           ...user,
           bio: res.data.user?.bio,
           profilePicture: res.data.user?.profilePicture,
-          gender: res.data.user.gender,
+          gender: res.data.user?.gender ?? user?.gender,
         };
         dispatch(setAuthUser(updatedUserData));
         navigate(`/profile/${user?._id}`);
@@ -97,6 +96,7 @@ const EditProfile = () => {
             ref={imageRef}
             onChange={fileChangeHandler}
             type="file"
+            accept="image/*"
             className="hidden"
           />
           <Button
@@ -117,17 +117,15 @@ const EditProfile = () => {
         </div>
         <div>
           <h1 className="font-bold mb-2">Gender</h1>
-          <Select
-            defaultValue={input.gender}
-            onValueChange={selectChangeHandler}
-          >
+          <Select value={input.gender || undefined} onValueChange={selectChangeHandler}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
