@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// https://vite.dev/config/
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "")
   const fallbackApiUrl = mode === "development" ? "http://localhost:8000" : ""
